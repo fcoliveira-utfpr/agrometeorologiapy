@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agrometeorologiapy"
+version = "0.1.0"
+description = "Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade, balanço de energia, evapotranspiração, grau-dias e balanço hídrico."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [
+    { name = "Fabricio C. de Oliveira", email = "fcoliveira@utfpr.edu.br" },
+]
+keywords = [
+    "agrometeorologia",
+    "agrometeorology",
+    "evapotranspiracao",
+    "evapotranspiration",
+    "radiacao-solar",
+    "balanco-hidrico",
+    "agronomia",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.21",
+    "pandas>=1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "build",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/fcoliveira/agrometeorologiapy"
+Repository = "https://github.com/fcoliveira/agrometeorologiapy"
+Issues = "https://github.com/fcoliveira/agrometeorologiapy/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agrometeorologiapy"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["tests", "src/agrometeorologiapy"]
