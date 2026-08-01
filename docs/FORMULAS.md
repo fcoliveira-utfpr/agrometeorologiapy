@@ -216,15 +216,12 @@ extraterrestre mensal ($Q_o$, a partir da declinação solar do dia juliano
 médio de cada mês) e converte para equivalente de evaporação:
 $$ Q_{o,mm} = 0{,}408 \cdot Q_{o} $$
 
-O coeficiente F depende da temperatura média **anual**:
-$$
-F =
-\begin{cases}
-0{,}0100 & \text{se } \bar{T}_{anual} < 23°C \\
-0{,}0105 & \text{se } 23°C \le \bar{T}_{anual} < 24°C \\
-0{,}0110 & \text{se } \bar{T}_{anual} \ge 24°C
-\end{cases}
-$$
+O coeficiente F depende da temperatura média **anual** ($\bar{T}_{anual}$):
+
+- $F = 0{,}0100$ se $\bar{T}_{anual} < 23°C$
+- $F = 0{,}0105$ se $23°C \le \bar{T}_{anual} < 24°C$
+- $F = 0{,}0110$ se $\bar{T}_{anual} \ge 24°C$
+
 $$ ETP = F \cdot Q_{o,mm} \cdot T \cdot \text{dias\_mes} \quad [\text{mm/mês}] $$
 
 ### `etp_hargreaves_samani(Qo, Tmax, Tmin, Tmed)`
@@ -252,15 +249,11 @@ $$ ETo = \frac{0{,}408 \, \Delta (R_n - G) + \gamma \cdot \frac{900}{T_{med}+273
 Módulo `agrometeorologiapy.grau_dias`.
 
 ### Regra do grau-dia diário (GDi)
-Usada tanto por `data_maturacao_fisiologica` quanto por `data_semeadura`:
-$$
-GD_i =
-\begin{cases}
-T_{med} - T_b & \text{se } T_b < T_{min} \\[4pt]
-\dfrac{(T_{max} - T_b)^2}{2(T_{max} - T_{min})} & \text{se } T_b \ge T_{min}
-\end{cases}
-$$
-onde $T_b$ é a temperatura base da cultura.
+Usada tanto por `data_maturacao_fisiologica` quanto por `data_semeadura`,
+onde $T_b$ é a temperatura base da cultura:
+
+- $GD_i = T_{med} - T_b$, se $T_b < T_{min}$
+- $GD_i = \dfrac{(T_{max} - T_b)^2}{2(T_{max} - T_{min})}$, se $T_b \ge T_{min}$
 
 ### `data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, intervalo='d', ano=2023)`
 A partir da data de semeadura, acumula $GD_i \times n_{período}$
@@ -287,30 +280,23 @@ $$ P - ETP $$
 
 - Se $P - ETP < 0$ (déficit): acumula o negativo e recalcula o
   armazenamento por via exponencial —
-  $$ NEG\_ACUM_i = NEG\_ACUM_{i-1} + (P - ETP) $$
-  $$ ARM_i = CAD \cdot e^{\,NEG\_ACUM_i / CAD} $$
+  $$ \text{NEG.ACUM}_i = \text{NEG.ACUM}_{i-1} + (P - ETP) $$
+  $$ ARM_i = CAD \cdot e^{\,\text{NEG.ACUM}_i / CAD} $$
 - Se $P - ETP \ge 0$ (reposição): o solo recebe água até no máximo `CAD` —
   $$ ARM_i = \min(ARM_{i-1} + (P - ETP),\; CAD) $$
   e, se $ARM_i < CAD$, o NEG.ACUM é recalculado por inversão:
-  $$ NEG\_ACUM_i = CAD \cdot \ln(ARM_i / CAD) $$
+  $$ \text{NEG.ACUM}_i = CAD \cdot \ln(ARM_i / CAD) $$
 
 A partir do armazenamento, derivam-se:
 $$ ALT_i = ARM_i - ARM_{i-1} $$
-$$
-ETR_i =
-\begin{cases}
-P_i + |ALT_i| & \text{se } P_i - ETP_i < 0 \\
-ETP_i & \text{caso contrário}
-\end{cases}
-$$
+
+- $ETR_i = P_i + |ALT_i|$, se $P_i - ETP_i < 0$
+- $ETR_i = ETP_i$, caso contrário
+
 $$ DEF_i = ETP_i - ETR_i $$
-$$
-EXC_i =
-\begin{cases}
-(P_i - ETP_i) - ALT_i & \text{se } P_i - ETP_i > 0 \text{ e } ARM_i = CAD \\
-0 & \text{caso contrário}
-\end{cases}
-$$
+
+- $EXC_i = (P_i - ETP_i) - ALT_i$, se $P_i - ETP_i > 0$ e $ARM_i = CAD$
+- $EXC_i = 0$, caso contrário
 
 ### `balanco_hidrico_cultura(df)`
 Mesmo método, aplicado a uma cultura específica com `Chuva`, `ETc` (=
