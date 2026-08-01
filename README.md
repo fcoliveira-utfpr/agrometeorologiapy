@@ -1,7 +1,7 @@
 # agrometeorologiapy
 
 [![PyPI](https://img.shields.io/pypi/v/agrometeorologiapy.svg)](https://pypi.org/project/agrometeorologiapy/)
-[![CI](https://github.com/fcoliveira/agrometeorologiapy/actions/workflows/ci.yml/badge.svg)](https://github.com/fcoliveira/agrometeorologiapy/actions/workflows/ci.yml)
+[![CI](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml/badge.svg)](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 
 Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade
@@ -47,7 +47,7 @@ Um notebook com exemplos numéricos resolvidos para cada método está em
 ## Desenvolvimento
 
 ```bash
-git clone https://github.com/fcoliveira/agrometeorologiapy.git
+git clone https://github.com/fcoliveira-utfpr/agrometeorologiapy.git
 cd agrometeorologiapy
 pip install -e ".[dev]"
 pytest

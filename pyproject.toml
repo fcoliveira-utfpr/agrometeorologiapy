@@ -46,9 +46,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/fcoliveira/agrometeorologiapy"
-Repository = "https://github.com/fcoliveira/agrometeorologiapy"
-Issues = "https://github.com/fcoliveira/agrometeorologiapy/issues"
+Homepage = "https://github.com/fcoliveira-utfpr/agrometeorologiapy"
+Repository = "https://github.com/fcoliveira-utfpr/agrometeorologiapy"
+Issues = "https://github.com/fcoliveira-utfpr/agrometeorologiapy/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agrometeorologiapy"]
