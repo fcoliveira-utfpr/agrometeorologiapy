@@ -49,7 +49,7 @@ As funções também podem ser acessadas por submódulo (`amp.radiacao`,
 | `grau_dias` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
 | `balanco_hidrico` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
 
-- [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
+- [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md)) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
 - [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.
 - [`examples/formulas_agrometeorologia.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/formulas_agrometeorologia.ipynb) — notebook original de desenvolvimento, com a dedução teórica de cada fórmula.
 
