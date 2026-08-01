@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/agrometeorologiapy.svg)](https://pypi.org/project/agrometeorologiapy/)
 [![CI](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml/badge.svg)](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml)
-[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb)
 
 Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade
@@ -49,9 +49,9 @@ As funções também podem ser acessadas por submódulo (`amp.radiacao`,
 | `grau_dias` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
 | `balanco_hidrico` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
 
-- [`docs/FORMULAS.md`](docs/FORMULAS.md) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
-- [`examples/tutorial_colab.ipynb`](examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.
-- [`examples/formulas_agrometeorologia.ipynb`](examples/formulas_agrometeorologia.ipynb) — notebook original de desenvolvimento, com a dedução teórica de cada fórmula.
+- [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
+- [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.
+- [`examples/formulas_agrometeorologia.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/formulas_agrometeorologia.ipynb) — notebook original de desenvolvimento, com a dedução teórica de cada fórmula.
 
 ## Desenvolvimento
 
@@ -64,4 +64,4 @@ pytest
 
 ## Licença
 
-BSD-3-Clause. Veja [LICENSE](LICENSE).
+BSD-3-Clause. Veja [LICENSE](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LICENSE).

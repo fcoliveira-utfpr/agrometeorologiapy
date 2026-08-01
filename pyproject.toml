@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agrometeorologiapy"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade, balanço de energia, evapotranspiração, grau-dias e balanço hídrico."
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -49,6 +49,9 @@ dev = [
 Homepage = "https://github.com/fcoliveira-utfpr/agrometeorologiapy"
 Repository = "https://github.com/fcoliveira-utfpr/agrometeorologiapy"
 Issues = "https://github.com/fcoliveira-utfpr/agrometeorologiapy/issues"
+Documentation = "https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md"
+Tutorial = "https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb"
+Changelog = "https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agrometeorologiapy"]
