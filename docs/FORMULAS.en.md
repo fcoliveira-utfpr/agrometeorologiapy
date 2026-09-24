@@ -351,6 +351,9 @@ $$ I = \sum_{m=1}^{12} i_m \qquad \text{(annual heat index)} $$
 $$ a = 6{.}75 \times 10^{-7} I^3 - 7{.}71 \times 10^{-5} I^2 + 1{.}792 \times 10^{-2} I + 0{.}49239 $$
 $$ ETP_{nc} = 16 \left( \frac{10 T}{I} \right)^{a} \quad \text{(uncorrected, mm/month of 30 days and 12h of sunlight)} $$
 
+For $T \ge 26{.}5$ °C the original method uses a table instead of the equation above:
+$$ ETP_{nc} = -415{.}85 + 32{.}24\,T - 0{.}43\,T^2 $$
+
 Corrected by the month's real photoperiod (via the solar declination for
 the month's mean Julian day) and by the actual number of days in the
 month:
@@ -504,7 +507,7 @@ walked backwards).
 Module `agrometeorologiapy.balanco_hidrico`. Both functions implement the
 sequential accounting method of Thornthwaite & Mather (1955).
 
-### `balanco_hidrico_climatologico(df, CAD=100.0)`
+### `balanco_hidrico_climatologico(df, CAD=100.0, ciclico=True)`
 For each period (month) $i$:
 $$ P - ETP $$
 
@@ -536,8 +539,10 @@ $$ DEF_i = ETP_i - ETR_i $$
 - $P_i$, $ETP_i$ — precipitation and potential evapotranspiration for
   period $i$, in mm/month
 - $ARM_i$ (column `ARM (mm/mês)`) — soil water storage at the end of
-  period $i$, in mm; $i-1$ is the previous period (the first period starts
-  from $ARM = CAD$, full soil)
+  period $i$, in mm; $i-1$ is the previous period. With `ciclico=True`
+  (default), the storage before January is December's storage at the
+  annual-cycle equilibrium (the 12 months are repeated until December's ARM
+  converges); with `ciclico=False`, it starts from $ARM = CAD$ (full soil)
 - $\text{NEG.ACUM}_i$ (column `NEG.ACUM (mm)`) — accumulated negative
   $P-ETP$, an auxiliary variable in mm, used in the exponential drying
   model
@@ -546,6 +551,23 @@ $$ DEF_i = ETP_i - ETR_i $$
 - $ETR_i$ (column `ETR (mm/mês)`) — actual evapotranspiration, in mm/month
 - $DEF_i$ (column `DEF (mm/mês)`) — water deficiency, in mm/month
 - $EXC_i$ (column `EXC (mm/mês)`) — water surplus, in mm/month
+
+### `balanco_hidrico_climatologico_grade(P, ETP, CAD=100.0, ciclico=True, tol=0.01, max_iter=100)`
+Same equations as `balanco_hidrico_climatologico`, vectorized with numpy
+for many locations at once (e.g. every pixel of a raster with the monthly
+climate normal).
+
+**Where:**
+- `P`, `ETP` — arrays of shape `(12, ...)`, in mm/month, January to
+  December along the first axis
+- `CAD` — scalar or array with the shape of the spatial dimensions, in mm
+  (> 0; use NaN for locations without data)
+- `ciclico` — equilibrium initial storage of the annual cycle (default) or
+  full soil before January
+- `tol`, `max_iter` — tolerance (mm) and maximum number of annual cycles
+  in the search for equilibrium
+- return — `dict` of `(12, ...)` arrays: `P-ETP`, `ARM`, `NEG.ACUM`,
+  `ALT`, `ETR`, `DEF`, `EXC`
 
 ### `balanco_hidrico_cultura(df)`
 The same method, applied to a specific crop with `Chuva` (rainfall),

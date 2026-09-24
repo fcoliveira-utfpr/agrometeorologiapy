@@ -334,6 +334,9 @@ $$ I = \sum_{m=1}^{12} i_m \qquad \text{(índice de calor anual)} $$
 $$ a = 6{,}75 \times 10^{-7} I^3 - 7{,}71 \times 10^{-5} I^2 + 1{,}792 \times 10^{-2} I + 0{,}49239 $$
 $$ ETP_{nc} = 16 \left( \frac{10 T}{I} \right)^{a} \quad \text{(não corrigida, mm/mês de 30 dias e 12h de sol)} $$
 
+Para $T \ge 26{,}5$ °C o método original usa uma tabela no lugar da equação acima:
+$$ ETP_{nc} = -415{,}85 + 32{,}24\,T - 0{,}43\,T^2 $$
+
 Correção pelo fotoperíodo real do mês (via declinação solar do dia juliano
 médio de cada mês) e pelo número real de dias do mês:
 $$ K = \frac{N}{12} \cdot \frac{\text{dias\_mes}}{30} $$
@@ -475,7 +478,7 @@ retrocede).
 Módulo `agrometeorologiapy.balanco_hidrico`. Ambas as funções implementam o
 método de contabilidade sequencial de Thornthwaite & Mather (1955).
 
-### `balanco_hidrico_climatologico(df, CAD=100.0)`
+### `balanco_hidrico_climatologico(df, CAD=100.0, ciclico=True)`
 Para cada período (mês) $i$:
 $$ P - ETP $$
 
@@ -506,8 +509,10 @@ $$ DEF_i = ETP_i - ETR_i $$
 - $P_i$, $ETP_i$ — precipitação e evapotranspiração potencial do período
   $i$, em mm/mês
 - $ARM_i$ (coluna `ARM (mm/mês)`) — armazenamento de água no solo ao fim do
-  período $i$, em mm; $i-1$ é o período anterior (o primeiro período parte
-  de $ARM = CAD$, solo cheio)
+  período $i$, em mm; $i-1$ é o período anterior. Com `ciclico=True`
+  (padrão), o ARM anterior a janeiro é o de dezembro no equilíbrio do ciclo
+  anual (os 12 meses são repetidos até o ARM de dezembro convergir); com
+  `ciclico=False`, parte de $ARM = CAD$ (solo cheio)
 - $\text{NEG.ACUM}_i$ (coluna `NEG.ACUM (mm)`) — negativo acumulado de
   $P-ETP$, variável auxiliar em mm, usada no modelo exponencial de secagem
 - $ALT_i$ (coluna `ALT (mm/mês)`) — variação do armazenamento entre
@@ -515,6 +520,23 @@ $$ DEF_i = ETP_i - ETR_i $$
 - $ETR_i$ (coluna `ETR (mm/mês)`) — evapotranspiração real, em mm/mês
 - $DEF_i$ (coluna `DEF (mm/mês)`) — deficiência hídrica, em mm/mês
 - $EXC_i$ (coluna `EXC (mm/mês)`) — excedente hídrico, em mm/mês
+
+### `balanco_hidrico_climatologico_grade(P, ETP, CAD=100.0, ciclico=True, tol=0.01, max_iter=100)`
+Mesmas equações de `balanco_hidrico_climatologico`, vetorizadas com numpy
+para muitos locais de uma vez (ex.: todos os pixels de um raster com a
+normal mensal).
+
+**Onde:**
+- `P`, `ETP` — arrays de formato `(12, ...)`, em mm/mês, com janeiro a
+  dezembro no primeiro eixo
+- `CAD` — escalar ou array com o formato das dimensões espaciais, em mm
+  (> 0; use NaN para locais sem dado)
+- `ciclico` — armazenamento inicial de equilíbrio do ciclo anual (padrão)
+  ou solo cheio antes de janeiro
+- `tol`, `max_iter` — tolerância (mm) e número máximo de ciclos anuais na
+  busca do equilíbrio
+- retorno — `dict` com arrays `(12, ...)`: `P-ETP`, `ARM`, `NEG.ACUM`,
+  `ALT`, `ETR`, `DEF`, `EXC`
 
 ### `balanco_hidrico_cultura(df)`
 Mesmo método, aplicado a uma cultura específica com `Chuva`, `ETc` e `CAD`

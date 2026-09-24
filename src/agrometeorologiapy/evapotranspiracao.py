@@ -48,6 +48,8 @@ def thornthwaite_mensal(df, col_T='T_media_C', lat=None):
     I = i_mensal.sum()
     a = 6.75e-7 * I ** 3 - 7.71e-5 * I ** 2 + 1.792e-2 * I + 0.49239
     ETP_nc = np.where(T_mensal > 0, 16 * (10 * T_mensal / I) ** a, 0)
+    # Acima de 26,5 °C o método original usa tabela, e não a equação exponencial.
+    ETP_nc = np.where(T_mensal >= 26.5, -415.85 + 32.24 * T_mensal - 0.43 * T_mensal ** 2, ETP_nc)
 
     declinacao = 23.45 * sind(360 * (284 + dia_juliano_medio) / 365)
     tand_lat = sind(lat) / cosd(lat)

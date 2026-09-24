@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.0] - não publicada
+
+### Adicionado
+- `balanco_hidrico_climatologico_grade`: BHC de Thornthwaite & Mather
+  vetorizado com numpy, para muitos locais de uma vez (ex.: todos os pixels
+  de um raster com a normal mensal), com CAD escalar ou por local.
+
+### Corrigido
+- `balanco_hidrico_climatologico`: o armazenamento inicial passa a ser o de
+  equilíbrio do ciclo anual (`ciclico=True`, padrão), e não mais o solo
+  cheio em janeiro. Faz diferença onde janeiro é seco (ex.: semiárido,
+  hemisfério norte). `ciclico=False` mantém o início com solo cheio.
+- `balanco_hidrico_climatologico`: o ALT de janeiro era zerado
+  (`diff().fillna(0)`), ignorando a variação a partir do armazenamento
+  inicial; isso distorcia ETR e DEF de janeiro quando ele é seco.
+- `thornthwaite_mensal`: para T >= 26,5 °C usa a equação da tabela do método
+  original (-415,85 + 32,24 T - 0,43 T²) no lugar da exponencial.
+
 ## [0.1.1] - 2026-08-01
 
 Sem mudanças de código. Só documentação e metadados:

@@ -14,6 +14,16 @@ def test_aplicacao_3_thornthwaite_mensal():
     assert df_out['ETP_mm_mes'].tolist() == pytest.approx(esperado)
 
 
+def test_thornthwaite_mensal_acima_de_26_5_usa_tabela():
+    # No equador o fotoperíodo é 12 h o ano todo, então K = dias_mes / 30.
+    df_in = pd.DataFrame({'Mes': MESES, 'T_media_C': [28.0] * 12})
+    df_out = amp.thornthwaite_mensal(df_in, lat=0.0)
+    etp_padrao = -415.85 + 32.24 * 28 - 0.43 * 28 ** 2
+    dias = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    esperado = [round(etp_padrao * d / 30, 2) for d in dias]
+    assert df_out['ETP_mm_mes'].tolist() == pytest.approx(esperado)
+
+
 def test_aplicacao_4_camargo_maluf_mensal():
     df_in = pd.DataFrame({'Mes': MESES, 'T_media_C': T_MENSAL})
     df_out = amp.camargo_maluf_mensal(df_in, lat=-24.85)

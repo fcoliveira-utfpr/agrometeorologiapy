@@ -7,7 +7,11 @@ Priestley-Taylor, Penman-Monteith FAO-56), grau-dias e balanço hídrico
 """
 
 from ._trig import acosd, cosd, sind, tand
-from .balanco_hidrico import balanco_hidrico_climatologico, balanco_hidrico_cultura
+from .balanco_hidrico import (
+    balanco_hidrico_climatologico,
+    balanco_hidrico_climatologico_grade,
+    balanco_hidrico_cultura,
+)
 from .energia import boc_saldo, bol_saldo, saldo_radiacao
 from .evapotranspiracao import (
     camargo_maluf_mensal,
@@ -46,7 +50,7 @@ from .umidade import (
     umidade_saturacao,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 __all__ = [
     "sind", "cosd", "tand", "acosd",
@@ -62,5 +66,6 @@ __all__ = [
     "thornthwaite_mensal", "camargo_maluf_mensal", "etp_hargreaves_samani",
     "declive_pressao_vapor", "etp_priestley_taylor", "eto_penman_monteith_fao56",
     "data_maturacao_fisiologica", "data_semeadura",
-    "balanco_hidrico_climatologico", "balanco_hidrico_cultura",
+    "balanco_hidrico_climatologico", "balanco_hidrico_climatologico_grade",
+    "balanco_hidrico_cultura",
 ]

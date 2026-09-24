@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -24,6 +25,70 @@ def test_aplicacao_10_balanco_hidrico_climatologico():
     assert df_bh['ETR (mm/mês)'].round(3).tolist() == pytest.approx(esperado_etr, abs=1e-2)
     assert df_bh['DEF (mm/mês)'].round(3).tolist() == pytest.approx(esperado_def, abs=1e-2)
     assert df_bh['EXC (mm/mês)'].round(3).tolist() == pytest.approx(esperado_exc, abs=1e-2)
+
+
+# Semiárido nordestino (tipo Petrolina): janeiro é seco e a estação chuvosa
+# é fev-abr, então partir do solo cheio em janeiro não serve.
+P_SEMIARIDO = np.array([40.0, 80, 110, 70, 20, 10, 5, 2, 3, 8, 20, 35])
+ETP_SEMIARIDO = np.array([170.0, 145, 150, 135, 125, 110, 120, 150, 170, 190, 185, 180])
+P_UMIDO = np.array([203.4, 189.53, 196.27, 116.93, 14.03, 3.33, 1.3, 4.37, 18.03, 99.47, 223.73, 234.97])
+ETP_UMIDO = np.array([128.73, 106.29, 117.3, 109.26, 106.8, 102.03, 114.99, 134.52, 141.43, 149.15, 118.62, 119.96])
+
+
+def test_bhc_grade_igual_ao_dataframe():
+    df_ini = pd.DataFrame({'Meses': range(1, 13), 'P (mm/mês)': P_UMIDO, 'ETP (mm/mês)': ETP_UMIDO})
+    df_bh = amp.balanco_hidrico_climatologico(df_ini, CAD=100.0)
+    bh = amp.balanco_hidrico_climatologico_grade(P_UMIDO, ETP_UMIDO, CAD=100.0)
+    for chave, coluna in [('ARM', 'ARM (mm/mês)'), ('ETR', 'ETR (mm/mês)'),
+                          ('DEF', 'DEF (mm/mês)'), ('EXC', 'EXC (mm/mês)')]:
+        assert bh[chave] == pytest.approx(df_bh[coluna].to_numpy())
+
+
+def test_bhc_grade_varios_pixels_e_cad_por_pixel():
+    # 2 x 3 pixels: cada coluna é um clima; cada linha, uma CAD diferente.
+    P = np.stack([P_UMIDO, P_SEMIARIDO, P_UMIDO], axis=1)[:, np.newaxis, :].repeat(2, axis=1)
+    ETP = np.stack([ETP_UMIDO, ETP_SEMIARIDO, ETP_UMIDO], axis=1)[:, np.newaxis, :].repeat(2, axis=1)
+    CAD = np.array([[100.0, 100.0, 100.0], [50.0, 150.0, 200.0]])
+    bh = amp.balanco_hidrico_climatologico_grade(P, ETP, CAD)
+    assert bh['ARM'].shape == (12, 2, 3)
+    for i in range(2):
+        for j in range(3):
+            um = amp.balanco_hidrico_climatologico_grade(P[:, i, j], ETP[:, i, j], CAD[i, j])
+            for chave in ('ARM', 'ETR', 'DEF', 'EXC'):
+                # Com vários pixels o laço segue até todos convergirem: diferenças < tol.
+                assert bh[chave][:, i, j] == pytest.approx(um[chave], abs=0.02)
+
+
+def test_bhc_ciclico_fecha_o_ano_e_conserva_agua():
+    CAD = 100.0
+    bh = amp.balanco_hidrico_climatologico_grade(P_SEMIARIDO, ETP_SEMIARIDO, CAD)
+    # O ARM de dezembro, aplicado a janeiro, reproduz o ARM de janeiro.
+    p_etp_jan = P_SEMIARIDO[0] - ETP_SEMIARIDO[0]
+    assert bh['ARM'][0] == pytest.approx(bh['ARM'][-1] * np.exp(p_etp_jan / CAD), abs=0.05)
+    # Em equilíbrio a soma das variações de armazenamento é ~0: P = ETR + EXC e ETP = ETR + DEF.
+    assert bh['ALT'].sum() == pytest.approx(0.0, abs=0.05)
+    assert P_SEMIARIDO.sum() == pytest.approx(bh['ETR'].sum() + bh['EXC'].sum(), abs=0.05)
+    assert ETP_SEMIARIDO.sum() == pytest.approx(bh['ETR'].sum() + bh['DEF'].sum())
+    # Nesse clima o solo nunca enche: sem excedente e armazenamento bem abaixo da CAD.
+    assert bh['EXC'].sum() == 0.0
+    assert bh['ARM'].max() < 0.5 * CAD
+
+
+def test_bhc_nao_ciclico_parte_do_solo_cheio():
+    CAD = 100.0
+    bh = amp.balanco_hidrico_climatologico_grade(P_SEMIARIDO, ETP_SEMIARIDO, CAD, ciclico=False)
+    arm_jan = CAD * np.exp((P_SEMIARIDO[0] - ETP_SEMIARIDO[0]) / CAD)
+    assert bh['ARM'][0] == pytest.approx(arm_jan)
+    # ALT de janeiro conta a saída de água a partir do solo cheio (não é zerado).
+    assert bh['ALT'][0] == pytest.approx(arm_jan - CAD)
+    assert bh['ETR'][0] == pytest.approx(P_SEMIARIDO[0] + CAD - arm_jan)
+
+
+def test_bhc_grade_valida_entradas():
+    with pytest.raises(ValueError):
+        amp.balanco_hidrico_climatologico_grade(np.ones(11), np.ones(11))
+    with pytest.raises(ValueError):
+        amp.balanco_hidrico_climatologico_grade(np.ones(12), np.ones(12), CAD=0.0)
 
 
 def test_aplicacao_11_balanco_hidrico_cultura():
