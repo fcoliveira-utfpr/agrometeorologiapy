@@ -56,5 +56,11 @@ def test_aplicacao_7_penman_monteith_fao56():
     assert ETo_PM == pytest.approx(2.06065115224452)
 
 
+def test_vento_2m_fao56_exemplo_14():
+    # FAO-56, Exemplo 14: 3,2 m/s medidos a 10 m -> 2,4 m/s a 2 m
+    assert amp.vento_2m(3.2, 10) == pytest.approx(2.393, abs=1e-3)
+    assert amp.vento_2m(3.2, 2) == pytest.approx(3.2, abs=1e-3)
+
+
 def test_declive_pressao_vapor():
     assert amp.declive_pressao_vapor(14.3) == pytest.approx(0.10551678957120231)

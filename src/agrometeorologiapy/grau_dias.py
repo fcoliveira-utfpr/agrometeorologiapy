@@ -46,6 +46,8 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
     -------
     resultado : pandas.DataFrame
         Colunas 'data' e 'GD_ciclo' (GDA acumulado), da semeadura até a maturação.
+        A última linha é a data de maturação e o GDA acumulado até ela.
+        O ano avança quando o ciclo cruza dezembro -> janeiro.
     """
     df = df.reset_index(drop=True)
 
@@ -63,11 +65,16 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
     registros = []
     acumulado = 0.0
     data_final = None
+    ano_row = ano
+    mes_anterior = None
 
     for pos, i in enumerate(ordem):
         row = df.loc[i]
         Tmed, Tmax, Tmin = row['Tmed'], row['Tmax'], row['Tmin']
         mes_row = int(row['mes'])
+        if mes_anterior is not None and mes_row < mes_anterior:
+            ano_row += 1
+        mes_anterior = mes_row
 
         if Tb < Tmin:
             GDi = Tmed - Tb
@@ -79,7 +86,7 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
         elif intervalo == 'dec':
             n_periodo = 10
         elif intervalo == 'M':
-            n_periodo = monthrange(ano, mes_row)[1]
+            n_periodo = monthrange(ano_row, mes_row)[1]
         else:
             raise ValueError("intervalo deve ser 'd', 'M' ou 'dec'")
 
@@ -93,25 +100,34 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
         acumulado += GD_periodo
 
         if intervalo in ('d', 'dec'):
-            data_periodo = date(ano, mes_row, int(row['dia']))
+            data_periodo = date(ano_row, mes_row, int(row['dia']))
         else:
-            data_periodo = date(ano, mes_row, dia_semeadura if pos == 0 else 1)
-
-        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+            data_periodo = date(ano_row, mes_row, dia_semeadura if pos == 0 else 1)
 
         if acumulado >= CT:
             if intervalo == 'd':
                 data_final = data_periodo
             else:
+                # Dias do período necessários para completar CT; a última
+                # linha passa a ser a própria data de maturação.
                 faltante = CT - acumulado_anterior
                 dias_necessarios = int(np.ceil(faltante / GDi))
-                dias_necessarios = min(dias_necessarios, n_efetivo)
-                data_final = data_periodo + timedelta(days=dias_necessarios - 1)
+                dias_necessarios = min(max(dias_necessarios, 1), n_efetivo)
+                # No 1º mês (mensal) a contagem começa no dia seguinte à semeadura.
+                deslocamento = dias_necessarios if (pos == 0 and intervalo == 'M') else dias_necessarios - 1
+                data_final = data_periodo + timedelta(days=deslocamento)
+                acumulado = acumulado_anterior + GDi * dias_necessarios
+            registros.append({'data': data_final, 'GD_ciclo': round(acumulado, 2)})
             break
+
+        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+
+    if data_final is None:
+        raise ValueError("A soma térmica do df (um ciclo completo) não atinge CT.")
 
     resultado = pd.DataFrame(registros)
     print(f"Data de semeadura: {dia_semeadura:02d} de {_MESES_PT[mes_semeadura]}")
-    print(f"Data de maturação fisiológica: {data_final.day:02d} de {_MESES_PT[data_final.month]}")
+    print(f"Data de maturação fisiológica: {data_final.day:02d} de {_MESES_PT[data_final.month]} de {data_final.year}")
     return resultado
 
 
@@ -148,7 +164,9 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
     -------
     resultado : pandas.DataFrame
         Colunas 'data' e 'GD_ciclo' (GDA acumulado), da maturação (referência)
-        até a semeadura.
+        até a semeadura. A última linha é a data de semeadura e o GDA
+        acumulado até ela. `ano` é o ano da maturação; o ano recua quando o
+        ciclo cruza janeiro -> dezembro.
     """
     df = df.reset_index(drop=True)
 
@@ -166,11 +184,16 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
     registros = []
     acumulado = 0.0
     data_sem = None
+    ano_row = ano
+    mes_anterior = None
 
     for pos, i in enumerate(ordem):
         row = df.loc[i]
         Tmed, Tmax, Tmin = row['Tmed'], row['Tmax'], row['Tmin']
         mes_row = int(row['mes'])
+        if mes_anterior is not None and mes_row > mes_anterior:
+            ano_row -= 1
+        mes_anterior = mes_row
 
         if Tb < Tmin:
             GDi = Tmed - Tb
@@ -182,7 +205,7 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
         elif intervalo == 'dec':
             n_periodo = 10
         elif intervalo == 'M':
-            n_periodo = monthrange(ano, mes_row)[1]
+            n_periodo = monthrange(ano_row, mes_row)[1]
         else:
             raise ValueError("intervalo deve ser 'd', 'M' ou 'dec'")
 
@@ -196,23 +219,33 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
         acumulado += GD_periodo
 
         if intervalo in ('d', 'dec'):
-            data_periodo = date(ano, mes_row, int(row['dia']))
+            data_periodo = date(ano_row, mes_row, int(row['dia']))
         else:
-            data_periodo = date(ano, mes_row, 1)
-
-        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+            data_periodo = date(ano_row, mes_row, dia_maturacao if pos == 0 else 1)
 
         if acumulado >= CT:
             if intervalo == 'd':
                 data_sem = data_periodo
             else:
+                # Retrocede a partir do último dia do período.
                 faltante = CT - acumulado_anterior
                 dias_necessarios = int(np.ceil(faltante / GDi))
-                dias_necessarios = min(dias_necessarios, n_efetivo)
-                data_sem = data_periodo + timedelta(days=dias_necessarios - 1)
+                dias_necessarios = min(max(dias_necessarios, 1), n_efetivo)
+                if intervalo == 'M':
+                    fim_periodo = date(ano_row, mes_row, dia_maturacao if pos == 0 else n_periodo)
+                else:
+                    fim_periodo = data_periodo + timedelta(days=n_periodo - 1)
+                data_sem = fim_periodo - timedelta(days=dias_necessarios - 1)
+                acumulado = acumulado_anterior + GDi * dias_necessarios
+            registros.append({'data': data_sem, 'GD_ciclo': round(acumulado, 2)})
             break
+
+        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+
+    if data_sem is None:
+        raise ValueError("A soma térmica do df (um ciclo completo) não atinge CT.")
 
     resultado = pd.DataFrame(registros)
     print(f"Data de maturação (referência): {dia_maturacao:02d} de {_MESES_PT[mes_maturacao]}")
-    print(f"Data de semeadura necessária: {data_sem.day:02d} de {_MESES_PT[data_sem.month]}")
+    print(f"Data de semeadura necessária: {data_sem.day:02d} de {_MESES_PT[data_sem.month]} de {data_sem.year}")
     return resultado

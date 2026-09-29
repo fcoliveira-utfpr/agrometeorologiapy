@@ -24,8 +24,9 @@ def test_aplicacao_8_data_maturacao_fisiologica():
                                                 dia_semeadura=dia_semeadura,
                                                 mes_semeadura=mes_semeadura,
                                                 intervalo='M')
-    assert resultado['data'].tolist()[-1] == datetime.date(2023, 2, 1)
-    assert resultado['GD_ciclo'].tolist() == pytest.approx([178.2, 513.0, 844.7, 1144.3])
+    assert resultado['data'].tolist() == [datetime.date(2023, 11, 12), datetime.date(2023, 12, 1),
+                                          datetime.date(2024, 1, 1), datetime.date(2024, 2, 18)]
+    assert resultado['GD_ciclo'].tolist() == pytest.approx([178.2, 513.0, 844.7, 1037.3])
 
 
 def test_aplicacao_9_data_semeadura():
@@ -41,5 +42,28 @@ def test_aplicacao_9_data_semeadura():
                                     dia_maturacao=dia_maturacao,
                                     mes_maturacao=mes_maturacao,
                                     intervalo='M')
-    assert resultado['data'].tolist()[-1] == datetime.date(2023, 4, 1)
-    assert resultado['GD_ciclo'].tolist() == pytest.approx([167.2, 443.1, 818.1])
+    assert resultado['data'].tolist() == [datetime.date(2023, 6, 22), datetime.date(2023, 5, 1),
+                                          datetime.date(2023, 4, 2)]
+    assert resultado['GD_ciclo'].tolist() == pytest.approx([167.2, 443.1, 805.6])
+
+
+def test_maturacao_diaria_cruza_ano():
+    datas = pd.date_range('2023-01-01', '2023-12-31')
+    df = pd.DataFrame({'dia': datas.day, 'mes': datas.month,
+                       'Tmed': 24.0, 'Tmax': 30.0, 'Tmin': 18.0})
+    resultado = amp.data_maturacao_fisiologica(df, Tb=14, CT=100,
+                                                dia_semeadura=25, mes_semeadura=12)
+    # 10 °C·dia por dia -> 10 dias contando o dia da semeadura
+    assert resultado['data'].tolist()[-1] == datetime.date(2024, 1, 3)
+    assert resultado['GD_ciclo'].tolist()[-1] == pytest.approx(100.0)
+
+
+def test_maturacao_decendial():
+    df = pd.DataFrame({'dia': [1, 11, 21] * 12,
+                       'mes': [m for m in MESES for _ in range(3)],
+                       'Tmed': 24.0, 'Tmax': 30.0, 'Tmin': 18.0})
+    resultado = amp.data_maturacao_fisiologica(df, Tb=14, CT=250, dia_semeadura=1,
+                                                mes_semeadura=3, intervalo='dec')
+    # 100 + 100 + 50 -> 5º dia do 3º decêndio
+    assert resultado['data'].tolist()[-1] == datetime.date(2023, 3, 25)
+    assert resultado['GD_ciclo'].tolist()[-1] == pytest.approx(250.0)

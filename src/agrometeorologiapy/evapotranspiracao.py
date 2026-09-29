@@ -11,6 +11,7 @@ __all__ = [
     "etp_hargreaves_samani",
     "declive_pressao_vapor",
     "etp_priestley_taylor",
+    "vento_2m",
     "eto_penman_monteith_fao56",
 ]
 
@@ -211,6 +212,29 @@ def etp_priestley_taylor(Rn, G, Delta, gamma, alfa=1.26):
     """
     lambda_v = 2.45  # calor latente de vaporização, MJ/kg
     return alfa * (Delta / (Delta + gamma)) * (Rn - G) / lambda_v
+
+
+def vento_2m(uz, z):
+    """
+    Converte a velocidade do vento medida a uma altura qualquer para a
+    altura-padrão de 2 m, pelo perfil logarítmico do vento (FAO-56, eq. 47).
+
+    Necessária para a equação de Penman-Monteith FAO-56, que exige o vento
+    a 2 m acima de uma superfície gramada.
+
+    Parâmetros
+    ----------
+    uz : float ou array
+        Velocidade do vento medida à altura z, em m/s.
+    z : float ou array
+        Altura de medição acima da superfície do solo, em m.
+
+    Retorna
+    -------
+    u2 : float ou array
+        Velocidade do vento a 2 m de altura, em m/s.
+    """
+    return uz * 4.87 / np.log(67.8 * z - 5.42)
 
 
 def eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma):

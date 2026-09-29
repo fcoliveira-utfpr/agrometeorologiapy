@@ -2,8 +2,9 @@
 
 Funções para radiação solar, temperatura, umidade do ar, balanço de
 energia, evapotranspiração (Thornthwaite, Camargo-Maluf, Hargreaves-Samani,
-Priestley-Taylor, Penman-Monteith FAO-56), grau-dias e balanço hídrico
-(climatológico e de cultura).
+Priestley-Taylor, Penman-Monteith FAO-56), grau-dias, balanço hídrico
+(climatológico e de cultura) e classificação climática (Köppen-Geiger,
+Thornthwaite, Camargo e Holdridge).
 """
 
 from ._trig import acosd, cosd, sind, tand
@@ -11,6 +12,16 @@ from .balanco_hidrico import (
     balanco_hidrico_climatologico,
     balanco_hidrico_climatologico_grade,
     balanco_hidrico_cultura,
+)
+from .classificacao_climatica import (
+    classificacao_camargo,
+    classificacao_camargo_grade,
+    classificacao_holdridge,
+    classificacao_holdridge_grade,
+    classificacao_koppen,
+    classificacao_koppen_grade,
+    classificacao_thornthwaite,
+    classificacao_thornthwaite_grade,
 )
 from .energia import boc_saldo, bol_saldo, saldo_radiacao
 from .evapotranspiracao import (
@@ -20,6 +31,7 @@ from .evapotranspiracao import (
     etp_hargreaves_samani,
     etp_priestley_taylor,
     thornthwaite_mensal,
+    vento_2m,
 )
 from .grau_dias import data_maturacao_fisiologica, data_semeadura
 from .radiacao import (
@@ -64,8 +76,13 @@ __all__ = [
     "ponto_orvalho", "constante_psicrometrica",
     "saldo_radiacao", "boc_saldo", "bol_saldo",
     "thornthwaite_mensal", "camargo_maluf_mensal", "etp_hargreaves_samani",
-    "declive_pressao_vapor", "etp_priestley_taylor", "eto_penman_monteith_fao56",
+    "declive_pressao_vapor", "etp_priestley_taylor", "vento_2m",
+    "eto_penman_monteith_fao56",
     "data_maturacao_fisiologica", "data_semeadura",
     "balanco_hidrico_climatologico", "balanco_hidrico_climatologico_grade",
     "balanco_hidrico_cultura",
+    "classificacao_koppen", "classificacao_koppen_grade",
+    "classificacao_thornthwaite", "classificacao_thornthwaite_grade",
+    "classificacao_camargo", "classificacao_camargo_grade",
+    "classificacao_holdridge", "classificacao_holdridge_grade",
 ]

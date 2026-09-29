@@ -26,6 +26,7 @@ fundamentos e aplicações práticas*, ESALQ/USP, complementado por Allen et al.
 - [6. Evapotranspiração](#6-evapotranspiração)
 - [7. Grau-Dias](#7-grau-dias)
 - [8. Balanço Hídrico](#8-balanço-hídrico)
+- [9. Classificação Climática](#9-classificação-climática)
 
 ---
 
@@ -410,6 +411,15 @@ $$ ETP = \alpha \cdot \frac{\Delta}{\Delta + \gamma} \cdot \frac{R_n - G}{\lambd
 - $\lambda = 2{,}45$ — calor latente de vaporização, em MJ/kg (constante fixa no código)
 - $\alpha$ (`alfa`) — coeficiente de Priestley-Taylor, adimensional (padrão 1,26)
 
+### `vento_2m(uz, z)`
+Converte o vento medido a uma altura qualquer para 2 m, pelo perfil
+logarítmico do vento (FAO-56, eq. 47):
+$$ u_2 = u_z \cdot \frac{4{,}87}{\ln(67{,}8 \, z - 5{,}42)} \quad [\text{m/s}] $$
+**Onde:**
+- $u_2$ (retorno) — velocidade do vento a 2 m de altura, em m/s
+- $u_z$ (`uz`) — velocidade do vento medida à altura $z$, em m/s
+- $z$ (`z`) — altura de medição acima do solo, em m
+
 ### `eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma)`
 Equação de Penman-Monteith padronizada pelo boletim FAO-56 (Allen et al.,
 1998), referenciada a uma cultura hipotética (grama, 0,12 m, albedo 0,23):
@@ -449,7 +459,11 @@ A partir da data de semeadura, acumula $GD_i \times n_{período}$
 período a período (diário, decendial ou mensal) até que o acumulado
 atinja a constante térmica do ciclo:
 $$ \sum GD_i \cdot n_{período} \ge CT $$
-Retorna a data em que isso ocorre — a maturação fisiológica.
+Retorna a data em que isso ocorre — a maturação fisiológica. No último
+período, conta-se apenas os dias necessários para completar `CT`
+($\lceil (CT - GDA_{anterior}) / GD_i \rceil$), de modo que a última linha
+do DataFrame é a própria data de maturação. O ano avança ao cruzar
+dezembro → janeiro.
 
 **Onde:**
 - `df` — série climática (colunas `dia`, `mes`, `Tmed`, `Tmax`, `Tmin`), em ordem cronológica
@@ -557,3 +571,170 @@ $$ ISNA = \frac{ETR}{ETc} $$
 - $ISNA$ (retorno, coluna `ISNA`) — Índice de Satisfação das Necessidades
   de Água, adimensional (0–1: quanto mais próximo de 1, menor o estresse
   hídrico da cultura)
+
+---
+
+## 9. Classificação Climática
+
+Módulo `agrometeorologiapy.classificacao_climatica`. Cada método tem duas
+versões: uma para **um local** (listas de 12 meses, jan–dez) e outra
+`_grade` para **muitos locais** (ex.: todos os pixels de um raster), com os
+12 meses no primeiro eixo, formato `(12, ...)`. Locais com NaN em qualquer
+mês recebem código 0 e classe `''`.
+
+**Estações do ano** (Thornthwaite e Camargo), astronômicas e ponderadas pela
+fração do mês em cada uma (hemisfério sul; no norte, verão ↔ inverno e
+outono ↔ primavera):
+
+| Estação | Meses |
+|---|---|
+| Verão | ⅓ dez + jan + fev + ⅔ mar |
+| Outono | ⅓ mar + abr + mai + ⅔ jun |
+| Inverno | ⅓ jun + jul + ago + ⅔ set |
+| Primavera | ⅓ set + out + nov + ⅔ dez |
+
+> A Tabela 1 de Aparecido et al. (2016) traz ⅓ jun no outono e ⅔ jun no
+> inverno; aqui junho segue o calendário astronômico (o inverno começa em 21/06).
+
+### `classificacao_koppen(T, P, lat)` · `classificacao_koppen_grade(T, P, lat)`
+Köppen-Geiger pela metodologia de Alvares et al. (2013), com a sazonalidade
+f/s/w dos grupos C e D de Kottek et al. (2006). Variáveis: $T_{ano}$ (média
+anual), $T_{frio}$ e $T_{quente}$ (mês mais frio e mais quente), $P_{ano}$ e
+$P_{seco}$ (total anual e mês mais seco); verão = out–mar no hemisfério sul.
+
+- **A** (tropical): $T_{frio} \ge 18$ °C — Af se $P_{seco} \ge 60$ mm; Am se
+  $P_{seco} \ge 100 - P_{ano}/25$; senão As (seca no verão) ou Aw (no inverno)
+- **B** (seco, prevalece sobre os demais): $P_{ano} < 10\,P_{lim}$, com
+  $P_{lim} = 2T_{ano} + 14$ (ou $2T_{ano}$ se ≥ 70% da chuva cai no inverno;
+  $2T_{ano} + 28$ se ≥ 70% cai no verão) — BW se $P_{ano} < 5\,P_{lim}$, senão
+  BS; h se $T_{ano} \ge 18$ °C, senão k
+- **C**: $-3 < T_{frio} < 18$ °C e $T_{quente} > 10$ °C; **D**: $T_{frio} \le -3$ °C;
+  **E**: $T_{quente} \le 10$ °C (ET se $T_{quente} > 0$, senão EF)
+- C/D — s: seca no verão ($P_{s,seco} < P_{w,seco}$, $P_{w,úmido} > 3P_{s,seco}$ e
+  $P_{s,seco} < 40$ mm); w: seca no inverno ($P_{w,seco} < P_{s,seco}$ e
+  $P_{s,úmido} > 10P_{w,seco}$); f: nem s nem w. a: $T_{quente} \ge 22$ °C;
+  b: ≥ 4 meses acima de 10 °C; c: 1–3 meses; d: $T_{frio} < -38$ °C
+
+**Onde:**
+- `T` — temperatura média mensal, em °C
+- `P` — precipitação mensal, em mm/mês
+- `lat` — latitude, em graus (negativa no hemisfério sul)
+- retorno — `id` (1–31) e `classe` (ex.: `'Cfa'`)
+
+### `classificacao_thornthwaite(P, ETP, lat, CAD=100)` · `classificacao_thornthwaite_grade(...)`
+Thornthwaite (1948), a partir do balanço hídrico climatológico
+(`balanco_hidrico_climatologico_grade`):
+$$ I_h = 100\,\frac{EXC}{ETP} \qquad I_a = 100\,\frac{DEF}{ETP} \qquad I_m = I_h - 0{,}6\,I_a $$
+$$ ETP_{verão}\,(\%) = 100\,\frac{ETP_{verão}}{ETP_{anual}} $$
+Classe = umidade ($I_m$) + subtipo + eficiência térmica ($ETP_{anual}$) +
+concentração estival ($ETP_{verão}$, %), ex.: `B1rA'a'`.
+
+| $I_m$ | Umidade | | $ETP_{anual}$ (mm) | Térmica |
+|---|---|---|---|---|
+| ≥ 100 | A (superúmido) | | ≥ 1140 | A' (megatérmico) |
+| 80–100 / 60–80 / 40–60 / 20–40 | B4 / B3 / B2 / B1 (úmido) | | 997–1140 / 855–997 / 712–855 / 570–712 | B'4 / B'3 / B'2 / B'1 (mesotérmico) |
+| 0–20 | C2 (subúmido) | | 427–570 / 285–427 | C'2 / C'1 (microtérmico) |
+| −20–0 | C1 (subúmido seco) | | 142–285 | D' (tundra) |
+| −40– −20 | D (semiárido) | | < 142 | E' (gelo perpétuo) |
+| < −40 | E (árido) | | | |
+
+- **Subtipo, climas úmidos** ($I_m \ge 0$), pela deficiência: r ($I_a < 16{,}7$);
+  s/w ($16{,}7 \le I_a < 33{,}3$); s2/w2 ($I_a \ge 33{,}3$) — s se a DEF do verão
+  for maior que a do inverno, senão w
+- **Subtipo, climas secos** ($I_m < 0$), pelo excedente: d ($I_h < 10$); s/w
+  ($10 \le I_h < 20$); s2/w2 ($I_h \ge 20$) — w se o EXC do verão for maior que
+  o do inverno, senão s
+- **Concentração estival** ($ETP_{verão}$, %): a' < 48; b'4 < 51,9; b'3 < 56,3;
+  b'2 < 61,6; b'1 < 68; c'2 < 76,3; c'1 < 88; d' ≥ 88
+
+> Tabelas de Aparecido et al. (2016), corrigidas pelo original de Thornthwaite
+> (1948) em três pontos em que o artigo traz erro de digitação: limite
+> B'3/B'2 = 855 mm (o artigo traz 885); secos s2/w2 com $I_h \ge 20$ (o artigo
+> traz 33,3); secos com excedente maior no verão = w (o artigo traz s).
+
+**Onde:**
+- `P`, `ETP` — precipitação e evapotranspiração potencial mensais, em mm/mês
+- `lat` — latitude, em graus (define verão e inverno)
+- `CAD` — capacidade de água disponível no solo, em mm (padrão 100)
+- retorno — `classe`, códigos (`umidade`, `subtipo`, `termica`,
+  `concentracao`), `Ih`, `Ia`, `Im`, `ETP_anual`, `DEF_anual`, `EXC_anual`,
+  `ETP_verao_pct` (e `descricao`, na versão de um local)
+
+### `classificacao_camargo(T, P, ETP, lat, CAD=100, tabela_termica='coerente')` · `classificacao_camargo_grade(...)`
+Camargo (1991) modificada por Maluf (2000), Tabelas 6–8 de Aparecido et al.
+(2016). Classe = térmica + `-` + hídrica + letra da estação seca, ex.: `ST-UMi`.
+
+| $T_{ano}$ (°C) | $T_{frio}$ (°C) | Térmica |
+|---|---|---|
+| ≤ 3 | | GL (glacial) |
+| 3–7 | | FR (frio) |
+| 7–12 | | CO (frio moderado) |
+| 12–18 | | TE (temperado) |
+| 18–22 | ≤ 13 | STE (subtemperado) |
+| 18–22 | 13–20 | ST (subtropical) |
+| 18–22 | > 20 | TR (tropical) |
+| 22–25 | | TR (tropical) |
+| > 25 | | EQ (equatorial) |
+
+| DEF anual (mm) | EXC anual (mm) | Hídrica |
+|---|---|---|
+| > 800 | 0 | DE (desértico) |
+| 150–800 | 0 | AR (árido) |
+| > 150 | 0–200 | SE (seco) |
+| > 150 | > 200 | MO (monçônico) |
+| 0–150 | 0–200 | SB (subúmido) |
+| 0–150 (> 0) | > 200 | UM (úmido) |
+| 0 | 200–1000 | PU (superúmido) |
+| 0 | > 1000 | SU (extremamente úmido) |
+
+Nas classes SE, MO, SB e UM, acrescenta-se a letra da estação com maior
+deficiência: v (verão), o (outono), i (inverno) ou p (primavera).
+
+> **Leitura da Tabela 6.** O artigo traz "22 < $T_{ano}$ ≤ 25 **ou**
+> $T_{frio}$ > 20 → TR", o que, lido ao pé da letra, impede a classe EQ onde o
+> mês mais frio passa de 20 °C (praticamente toda a região equatorial). O
+> padrão `tabela_termica='coerente'` usa $T_{frio}$ só para subdividir a faixa
+> 18–22 °C (tabela acima); `'literal'` aplica "$T_{frio}$ > 20 → TR" a todos os
+> casos, como no script do repositório `climas_brasil`.
+>
+> **Casos fora da Tabela 7.** O artigo não cobre 0 < DEF ≤ 150 mm com EXC = 0,
+> nem DEF = 0 com EXC ≤ 200 mm; aqui eles entram em SB. DEF e EXC abaixo de
+> 0,05 mm contam como zero.
+
+**Onde:**
+- `T` — temperatura média mensal, em °C
+- `P`, `ETP` — precipitação e evapotranspiração potencial mensais, em mm/mês
+- `lat` — latitude, em graus
+- `CAD` — capacidade de água disponível no solo, em mm (padrão 100)
+- `tabela_termica` — `'coerente'` (padrão) ou `'literal'`
+- retorno — `classe`, códigos (`termica`, `hidrica`, `estacao_seca`),
+  `T_anual`, `T_mes_frio`, `DEF_anual`, `EXC_anual` (e `descricao`, na versão
+  de um local)
+
+### `classificacao_holdridge(T, P, lat, ETP=None, limiar_correcao=24)` · `classificacao_holdridge_grade(...)`
+Zonas de vida de Holdridge (38 zonas; numeração e nomes de Jungkunst et al.,
+2021, a partir de Leemans, 1990). Biotemperatura:
+$$ t^*_m = t_m - \frac{3\,|\phi|}{100}\,(t_m - 24)^2 \;\;(\text{se } t_m > 24\ °C), \qquad BT = \overline{\min(\max(t^*_m, 0), 30)} $$
+$$ ETP_{anual} = 58{,}93 \cdot BT \qquad R = \frac{ETP_{anual}}{P_{anual}} $$
+A zona sai da combinação da faixa de biotemperatura (polar < 1,5; subpolar
+< 3; boreal < 6; temperado frio < 12; temperado quente < 18; subtropical
+< 24; tropical ≥ 24 °C) com a província de umidade, em faixas de $R$ que
+dobram a cada classe (0,125; 0,25; 0,5; 1; 2; 4; 8; 16; 32).
+
+**Onde:**
+- `T` — temperatura média mensal, em °C
+- `P` — precipitação mensal, em mm/mês
+- `lat` — latitude ($\phi$), em graus
+- `ETP` — ETP mensal, em mm/mês (opcional; se `None`, usa $58{,}93 \cdot BT$)
+- `limiar_correcao` — temperatura mensal acima da qual se corrige pela
+  latitude, em °C (padrão 24; `None` corrige todos os meses)
+- retorno — `id` (1–38), `classe` (nome da zona em português), `classe_en`
+  (nome original em inglês, como na fonte),
+  `biotemperatura` (°C), `P_anual`, `ETP_anual` (mm) e `razao_ETP`
+
+**Referências:** Alvares, C. A. et al. (2013) *Meteorol. Z.* 22:711–728 ·
+Kottek, M. et al. (2006) *Meteorol. Z.* 15:259–263 · Thornthwaite, C. W. (1948)
+*Geogr. Rev.* 38:55–94 · Camargo, A. P. (1991) · Maluf, J. R. T. (2000)
+*Rev. Bras. Agrometeorol.* 8:141–150 · Aparecido, L. E. O. et al. (2016)
+*Ciênc. Agrotec.* 40:405–417 · Holdridge, L. R. (1967) *Life zone ecology* ·
+Jungkunst, H. F. et al. (2021) *J. Plant Nutr. Soil Sci.* 184:5–11

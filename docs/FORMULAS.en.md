@@ -33,6 +33,7 @@ FAO-56) for the evapotranspiration methods.
 - [6. Evapotranspiration](#6-evapotranspiration)
 - [7. Growing Degree-Days](#7-growing-degree-days)
 - [8. Water Balance](#8-water-balance)
+- [9. Climate Classification](#9-climate-classification)
 
 ---
 
@@ -435,6 +436,15 @@ $$ ETP = \alpha \cdot \frac{\Delta}{\Delta + \gamma} \cdot \frac{R_n - G}{\lambd
 - $\alpha$ (`alfa`) — Priestley-Taylor coefficient, dimensionless (default
   1.26)
 
+### `vento_2m(uz, z)`
+Converts wind speed measured at any height to 2 m, using the logarithmic
+wind profile (FAO-56, eq. 47):
+$$ u_2 = u_z \cdot \frac{4{.}87}{\ln(67{.}8 \, z - 5{.}42)} \quad [\text{m/s}] $$
+**Where:**
+- $u_2$ (return) — wind speed at 2 m height, in m/s
+- $u_z$ (`uz`) — wind speed measured at height $z$, in m/s
+- $z$ (`z`) — measurement height above the ground, in m
+
 ### `eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma)`
 Penman-Monteith equation as standardized by the FAO-56 bulletin (Allen et
 al., 1998), referenced to a hypothetical reference crop (grass, 0.12 m,
@@ -477,7 +487,11 @@ Starting from the sowing date, accumulates $GD_i \times n_{period}$
 period by period (daily, dekadal or monthly) until the accumulated sum
 reaches the cycle's thermal constant:
 $$ \sum GD_i \cdot n_{period} \ge CT $$
-Returns the date on which that happens — physiological maturity.
+Returns the date on which that happens — physiological maturity. In the
+last period only the days needed to complete `CT` are counted
+($\lceil (CT - GDA_{previous}) / GD_i \rceil$), so the last row of the
+DataFrame is the maturity date itself. The year rolls over when the cycle
+crosses December → January.
 
 **Where:**
 - `df` — climate series (columns `dia`, `mes`, `Tmed`, `Tmax`, `Tmin`), in
@@ -589,3 +603,170 @@ $$ ISNA = \frac{ETR}{ETc} $$
 - $ISNA$ (return, column `ISNA`) — Water Requirement Satisfaction Index
   (*Índice de Satisfação das Necessidades de Água*), dimensionless (0–1:
   the closer to 1, the lower the crop's water stress)
+
+---
+
+## 9. Climate Classification
+
+Module `agrometeorologiapy.classificacao_climatica`. Each method has two
+versions: one for **a single site** (lists of 12 months, Jan–Dec) and a
+`_grade` one for **many sites** (e.g. every pixel of a raster), with the
+12 months on the first axis, shape `(12, ...)`. Sites with NaN in any month
+get code 0 and class `''`.
+
+**Seasons** (Thornthwaite and Camargo): astronomical, weighted by the
+fraction of each month in the season (southern hemisphere; in the north,
+summer ↔ winter and autumn ↔ spring):
+
+| Season | Months |
+|---|---|
+| Summer | ⅓ Dec + Jan + Feb + ⅔ Mar |
+| Autumn | ⅓ Mar + Apr + May + ⅔ Jun |
+| Winter | ⅓ Jun + Jul + Aug + ⅔ Sep |
+| Spring | ⅓ Sep + Oct + Nov + ⅔ Dec |
+
+> Table 1 of Aparecido et al. (2016) has ⅓ Jun in autumn and ⅔ Jun in
+> winter; here June follows the astronomical calendar (winter starts on 21 June).
+
+### `classificacao_koppen(T, P, lat)` · `classificacao_koppen_grade(T, P, lat)`
+Köppen-Geiger following Alvares et al. (2013), with the f/s/w seasonality of
+groups C and D from Kottek et al. (2006). Variables: $T_{ann}$ (annual mean),
+$T_{cold}$ and $T_{hot}$ (coldest and warmest month), $P_{ann}$ and $P_{dry}$
+(annual total and driest month); summer = Oct–Mar in the southern hemisphere.
+
+- **A** (tropical): $T_{cold} \ge 18$ °C — Af if $P_{dry} \ge 60$ mm; Am if
+  $P_{dry} \ge 100 - P_{ann}/25$; otherwise As (dry summer) or Aw (dry winter)
+- **B** (arid, overrides all others): $P_{ann} < 10\,P_{th}$, with
+  $P_{th} = 2T_{ann} + 14$ (or $2T_{ann}$ if ≥ 70% of rain falls in winter;
+  $2T_{ann} + 28$ if ≥ 70% falls in summer) — BW if $P_{ann} < 5\,P_{th}$,
+  otherwise BS; h if $T_{ann} \ge 18$ °C, otherwise k
+- **C**: $-3 < T_{cold} < 18$ °C and $T_{hot} > 10$ °C; **D**: $T_{cold} \le -3$ °C;
+  **E**: $T_{hot} \le 10$ °C (ET if $T_{hot} > 0$, otherwise EF)
+- C/D — s: dry summer ($P_{s,dry} < P_{w,dry}$, $P_{w,wet} > 3P_{s,dry}$ and
+  $P_{s,dry} < 40$ mm); w: dry winter ($P_{w,dry} < P_{s,dry}$ and
+  $P_{s,wet} > 10P_{w,dry}$); f: neither s nor w. a: $T_{hot} \ge 22$ °C;
+  b: ≥ 4 months above 10 °C; c: 1–3 months; d: $T_{cold} < -38$ °C
+
+**Where:**
+- `T` — monthly mean temperature, in °C
+- `P` — monthly precipitation, in mm/month
+- `lat` — latitude, in degrees (negative in the southern hemisphere)
+- return — `id` (1–31) and `classe` (e.g. `'Cfa'`)
+
+### `classificacao_thornthwaite(P, ETP, lat, CAD=100)` · `classificacao_thornthwaite_grade(...)`
+Thornthwaite (1948), from the climatological water balance
+(`balanco_hidrico_climatologico_grade`):
+$$ I_h = 100\,\frac{EXC}{ETP} \qquad I_a = 100\,\frac{DEF}{ETP} \qquad I_m = I_h - 0{.}6\,I_a $$
+$$ ETP_{summer}\,(\%) = 100\,\frac{ETP_{summer}}{ETP_{annual}} $$
+Class = moisture ($I_m$) + subtype + thermal efficiency ($ETP_{annual}$) +
+summer concentration ($ETP_{summer}$, %), e.g. `B1rA'a'`.
+
+| $I_m$ | Moisture | | $ETP_{annual}$ (mm) | Thermal |
+|---|---|---|---|---|
+| ≥ 100 | A (perhumid) | | ≥ 1140 | A' (megathermal) |
+| 80–100 / 60–80 / 40–60 / 20–40 | B4 / B3 / B2 / B1 (humid) | | 997–1140 / 855–997 / 712–855 / 570–712 | B'4 / B'3 / B'2 / B'1 (mesothermal) |
+| 0–20 | C2 (moist subhumid) | | 427–570 / 285–427 | C'2 / C'1 (microthermal) |
+| −20–0 | C1 (dry subhumid) | | 142–285 | D' (tundra) |
+| −40– −20 | D (semiarid) | | < 142 | E' (perpetual frost) |
+| < −40 | E (arid) | | | |
+
+- **Subtype, humid climates** ($I_m \ge 0$), by deficit: r ($I_a < 16{.}7$);
+  s/w ($16{.}7 \le I_a < 33{.}3$); s2/w2 ($I_a \ge 33{.}3$) — s if the summer
+  DEF exceeds the winter DEF, otherwise w
+- **Subtype, dry climates** ($I_m < 0$), by surplus: d ($I_h < 10$); s/w
+  ($10 \le I_h < 20$); s2/w2 ($I_h \ge 20$) — w if the summer EXC exceeds the
+  winter EXC, otherwise s
+- **Summer concentration** ($ETP_{summer}$, %): a' < 48; b'4 < 51.9;
+  b'3 < 56.3; b'2 < 61.6; b'1 < 68; c'2 < 76.3; c'1 < 88; d' ≥ 88
+
+> Tables from Aparecido et al. (2016), corrected against the original
+> Thornthwaite (1948) at three points where the paper has typos: B'3/B'2
+> limit = 855 mm (paper: 885); dry s2/w2 with $I_h \ge 20$ (paper: 33.3); dry
+> climates with larger summer surplus = w (paper: s).
+
+**Where:**
+- `P`, `ETP` — monthly precipitation and potential evapotranspiration, in mm/month
+- `lat` — latitude, in degrees (sets summer and winter)
+- `CAD` — soil available water capacity, in mm (default 100)
+- return — `classe`, codes (`umidade`, `subtipo`, `termica`,
+  `concentracao`), `Ih`, `Ia`, `Im`, `ETP_anual`, `DEF_anual`, `EXC_anual`,
+  `ETP_verao_pct` (plus `descricao` in the single-site version)
+
+### `classificacao_camargo(T, P, ETP, lat, CAD=100, tabela_termica='coerente')` · `classificacao_camargo_grade(...)`
+Camargo (1991) as modified by Maluf (2000), Tables 6–8 of Aparecido et al.
+(2016). Class = thermal + `-` + water + dry-season letter, e.g. `ST-UMi`.
+
+| $T_{ann}$ (°C) | $T_{cold}$ (°C) | Thermal |
+|---|---|---|
+| ≤ 3 | | GL (glacial) |
+| 3–7 | | FR (frigid) |
+| 7–12 | | CO (cold) |
+| 12–18 | | TE (temperate) |
+| 18–22 | ≤ 13 | STE (subtemperate) |
+| 18–22 | 13–20 | ST (subtropical) |
+| 18–22 | > 20 | TR (tropical) |
+| 22–25 | | TR (tropical) |
+| > 25 | | EQ (equatorial) |
+
+| Annual DEF (mm) | Annual EXC (mm) | Water |
+|---|---|---|
+| > 800 | 0 | DE (desert) |
+| 150–800 | 0 | AR (arid) |
+| > 150 | 0–200 | SE (dry) |
+| > 150 | > 200 | MO (monsoonal) |
+| 0–150 | 0–200 | SB (subhumid) |
+| 0–150 (> 0) | > 200 | UM (humid) |
+| 0 | 200–1000 | PU (very humid) |
+| 0 | > 1000 | SU (extremely humid) |
+
+For classes SE, MO, SB and UM, the letter of the season with the largest
+deficit is appended: v (summer), o (autumn), i (winter) or p (spring).
+
+> **Reading Table 6.** The paper has "22 < $T_{ann}$ ≤ 25 **or**
+> $T_{cold}$ > 20 → TR", which, read literally, rules out EQ wherever the
+> coldest month exceeds 20 °C (nearly the whole equatorial region). The
+> default `tabela_termica='coerente'` uses $T_{cold}$ only to split the
+> 18–22 °C range (table above); `'literal'` applies "$T_{cold}$ > 20 → TR" in
+> every case, as in the `climas_brasil` repository script.
+>
+> **Cases outside Table 7.** The paper does not cover 0 < DEF ≤ 150 mm with
+> EXC = 0, nor DEF = 0 with EXC ≤ 200 mm; here they fall into SB. DEF and EXC
+> below 0.05 mm count as zero.
+
+**Where:**
+- `T` — monthly mean temperature, in °C
+- `P`, `ETP` — monthly precipitation and potential evapotranspiration, in mm/month
+- `lat` — latitude, in degrees
+- `CAD` — soil available water capacity, in mm (default 100)
+- `tabela_termica` — `'coerente'` (default) or `'literal'`
+- return — `classe`, codes (`termica`, `hidrica`, `estacao_seca`),
+  `T_anual`, `T_mes_frio`, `DEF_anual`, `EXC_anual` (plus `descricao` in the
+  single-site version)
+
+### `classificacao_holdridge(T, P, lat, ETP=None, limiar_correcao=24)` · `classificacao_holdridge_grade(...)`
+Holdridge life zones (38 zones; numbering and names from Jungkunst et al.,
+2021, based on Leemans, 1990). Biotemperature:
+$$ t^*_m = t_m - \frac{3\,|\phi|}{100}\,(t_m - 24)^2 \;\;(\text{if } t_m > 24\ °C), \qquad BT = \overline{\min(\max(t^*_m, 0), 30)} $$
+$$ ETP_{annual} = 58{.}93 \cdot BT \qquad R = \frac{ETP_{annual}}{P_{annual}} $$
+The zone comes from combining the biotemperature belt (polar < 1.5;
+subpolar < 3; boreal < 6; cool temperate < 12; warm temperate < 18;
+subtropical < 24; tropical ≥ 24 °C) with the humidity province, in ranges of
+$R$ that double at each class (0.125; 0.25; 0.5; 1; 2; 4; 8; 16; 32).
+
+**Where:**
+- `T` — monthly mean temperature, in °C
+- `P` — monthly precipitation, in mm/month
+- `lat` — latitude ($\phi$), in degrees
+- `ETP` — monthly PET, in mm/month (optional; if `None`, uses $58{.}93 \cdot BT$)
+- `limiar_correcao` — monthly temperature above which the latitude
+  correction applies, in °C (default 24; `None` corrects every month)
+- return — `id` (1–38), `classe` (zone name in Portuguese), `classe_en`
+  (original English name, as in the source),
+  `biotemperatura` (°C), `P_anual`, `ETP_anual` (mm) and `razao_ETP`
+
+**References:** Alvares, C. A. et al. (2013) *Meteorol. Z.* 22:711–728 ·
+Kottek, M. et al. (2006) *Meteorol. Z.* 15:259–263 · Thornthwaite, C. W. (1948)
+*Geogr. Rev.* 38:55–94 · Camargo, A. P. (1991) · Maluf, J. R. T. (2000)
+*Rev. Bras. Agrometeorol.* 8:141–150 · Aparecido, L. E. O. et al. (2016)
+*Ciênc. Agrotec.* 40:405–417 · Holdridge, L. R. (1967) *Life zone ecology* ·
+Jungkunst, H. F. et al. (2021) *J. Plant Nutr. Soil Sci.* 184:5–11

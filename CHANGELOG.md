@@ -6,6 +6,14 @@
 - `balanco_hidrico_climatologico_grade`: BHC de Thornthwaite & Mather
   vetorizado com numpy, para muitos locais de uma vez (ex.: todos os pixels
   de um raster com a normal mensal), com CAD escalar ou por local.
+- Módulo `classificacao_climatica`: Köppen-Geiger (Alvares et al., 2013;
+  Kottek et al., 2006), Thornthwaite (1948), Camargo (1991) mod. Maluf (2000)
+  (Aparecido et al., 2016) e zonas de vida de Holdridge (38 zonas), cada um
+  para um local (`classificacao_koppen`, `classificacao_thornthwaite`,
+  `classificacao_camargo`, `classificacao_holdridge`) e em grade para
+  rasters (sufixo `_grade`).
+- `vento_2m`: converte o vento medido a qualquer altura para 2 m (FAO-56,
+  eq. 47), para uso em `eto_penman_monteith_fao56`.
 
 ### Corrigido
 - `balanco_hidrico_climatologico`: o armazenamento inicial passa a ser o de
@@ -17,6 +25,12 @@
   inicial; isso distorcia ETR e DEF de janeiro quando ele é seco.
 - `thornthwaite_mensal`: para T >= 26,5 °C usa a equação da tabela do método
   original (-415,85 + 32,24 T - 0,43 T²) no lugar da exponencial.
+- `data_maturacao_fisiologica` e `data_semeadura`: a última linha do
+  DataFrame passa a ser a data calculada (maturação ou semeadura) com o GDA
+  acumulado até ela, e não o início do último período com o GD do período
+  inteiro. O ano agora vira quando o ciclo cruza dezembro/janeiro.
+- `data_semeadura`: no último período, os dias passam a ser contados para
+  trás a partir do fim do período (antes contava a partir do início).
 
 ## [0.1.1] - 2026-08-01
 

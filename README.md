@@ -7,8 +7,9 @@
 
 Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade
 do ar, balanço de energia, evapotranspiração (Thornthwaite, Camargo-Maluf,
-Hargreaves-Samani, Priestley-Taylor, Penman-Monteith FAO-56), grau-dias e
-balanço hídrico (climatológico e de cultura).
+Hargreaves-Samani, Priestley-Taylor, Penman-Monteith FAO-56), grau-dias,
+balanço hídrico (climatológico e de cultura) e classificação climática
+(Köppen-Geiger, Thornthwaite, Camargo e Holdridge).
 
 ## Instalação
 
@@ -45,9 +46,10 @@ As funções também podem ser acessadas por submódulo (`amp.radiacao`,
 | `temperatura` | Temperatura média diária (extremos e estação automática) |
 | `umidade` | Pressão de saturação/parcial de vapor, déficit de saturação, pressão atmosférica, umidade absoluta/relativa/de saturação, ponto de orvalho, constante psicrométrica |
 | `energia` | Saldo de radiação, balanço de ondas curtas e longas |
-| `evapotranspiracao` | ETP por Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor; ETo por Penman-Monteith FAO-56 |
+| `evapotranspiracao` | ETP por Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor; ETo por Penman-Monteith FAO-56; conversão do vento para 2 m |
 | `grau_dias` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
 | `balanco_hidrico` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
+| `classificacao_climatica` | Köppen-Geiger, Thornthwaite, Camargo e Holdridge, para um local ou em grade (rasters) |
 
 - [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md)) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
 - [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.
