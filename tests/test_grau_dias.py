@@ -48,10 +48,19 @@ def test_aplicacao_9_data_semeadura():
                                     mes_maturacao=mes_maturacao,
                                     intervalo='M')
     assert resultado['data'].tolist() == [datetime.date(2023, 6, 22), datetime.date(2023, 5, 1),
-                                          datetime.date(2023, 4, 2)]
+                                          datetime.date(2023, 4, 1)]
     assert resultado['GDA_ciclo'].tolist() == pytest.approx([167.2, 443.1, 805.6])
     assert resultado['Meses'].tolist() == ['jun', 'mai', 'abr']
     assert resultado['GDA_mes'].tolist() == pytest.approx([167.2, 275.9, 362.5])
+
+
+def test_semeadura_e_maturacao_mensal_sao_inversas():
+    df = pd.DataFrame({'dia': [1] * 12, 'mes': MESES, 'Tmed': TMED, 'Tmax': TMAX, 'Tmin': TMIN})
+    sem = amp.data_semeadura(df, Tb=10, CT=800, dia_maturacao=22, mes_maturacao=6, intervalo='M')
+    d = sem['data'].tolist()[-1]
+    mat = amp.data_maturacao_fisiologica(df, Tb=10, CT=800, dia_semeadura=d.day,
+                                          mes_semeadura=d.month, intervalo='M')
+    assert mat['data'].tolist()[-1] == datetime.date(2023, 6, 22)
 
 
 def test_maturacao_diaria_cruza_ano():

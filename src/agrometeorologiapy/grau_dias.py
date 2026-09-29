@@ -246,7 +246,10 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
                     fim_periodo = date(ano_row, mes_row, dia_maturacao if pos == 0 else n_periodo)
                 else:
                     fim_periodo = data_periodo + timedelta(days=n_periodo - 1)
-                data_sem = fim_periodo - timedelta(days=dias_necessarios - 1)
+                # No mensal, como em data_maturacao_fisiologica, o dia da semeadura
+                # não entra na soma: a semeadura é a véspera do 1º dia contado.
+                recuo = dias_necessarios if intervalo == 'M' else dias_necessarios - 1
+                data_sem = fim_periodo - timedelta(days=recuo)
                 GD_periodo = GDi * dias_necessarios
                 acumulado = acumulado_anterior + GD_periodo
             registros.append(_registro(mes_row, data_sem, Tmed, GDi, GD_periodo, acumulado))

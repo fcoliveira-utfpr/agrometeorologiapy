@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1] - 2026-09-29
+
+### Corrigido
+- `data_semeadura` (intervalo mensal): o dia da semeadura deixa de entrar na
+  soma de graus-dia, como já ocorre em `data_maturacao_fisiologica`. A data
+  calculada passa a ser um dia antes (Aplicação 9: 01/04 em vez de 02/04), e
+  as duas funções ficam inversas uma da outra.
+
 ## [0.2.0] - 2026-09-29
 
 ### Adicionado
