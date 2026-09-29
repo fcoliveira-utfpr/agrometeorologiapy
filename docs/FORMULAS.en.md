@@ -492,6 +492,9 @@ last period only the days needed to complete `CT` are counted
 ($\lceil (CT - GDA_{previous}) / GD_i \rceil$), so the last row of the
 DataFrame is the maturity date itself. The year rolls over when the cycle
 crosses December → January.
+The result has one row per period with the columns `Meses` (abbreviated
+month), `data`, `Tmed`, `GDi` (daily degree-days), `GDA_mes` ($GD_i \times$
+days counted in the period) and `GDA_ciclo` (cycle accumulation).
 
 **Where:**
 - `df` — climate series (columns `dia`, `mes`, `Tmed`, `Tmax`, `Tmin`), in

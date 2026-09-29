@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0] - não publicada
+## [0.2.0] - 2026-09-29
 
 ### Adicionado
 - `balanco_hidrico_climatologico_grade`: BHC de Thornthwaite & Mather
@@ -29,6 +29,9 @@
   DataFrame passa a ser a data calculada (maturação ou semeadura) com o GDA
   acumulado até ela, e não o início do último período com o GD do período
   inteiro. O ano agora vira quando o ciclo cruza dezembro/janeiro.
+- `data_maturacao_fisiologica` e `data_semeadura`: o DataFrame passa a ter
+  as colunas `Meses`, `data`, `Tmed`, `GDi`, `GDA_mes` e `GDA_ciclo`. A antiga
+  `GD_ciclo` foi renomeada para `GDA_ciclo` (**quebra compatibilidade**).
 - `data_semeadura`: no último período, os dias passam a ser contados para
   trás a partir do fim do período (antes contava a partir do início).
 

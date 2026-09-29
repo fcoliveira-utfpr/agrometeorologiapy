@@ -26,7 +26,12 @@ def test_aplicacao_8_data_maturacao_fisiologica():
                                                 intervalo='M')
     assert resultado['data'].tolist() == [datetime.date(2023, 11, 12), datetime.date(2023, 12, 1),
                                           datetime.date(2024, 1, 1), datetime.date(2024, 2, 18)]
-    assert resultado['GD_ciclo'].tolist() == pytest.approx([178.2, 513.0, 844.7, 1037.3])
+    assert resultado['GDA_ciclo'].tolist() == pytest.approx([178.2, 513.0, 844.7, 1037.3])
+    assert resultado.columns.tolist() == ['Meses', 'data', 'Tmed', 'GDi', 'GDA_mes', 'GDA_ciclo']
+    assert resultado['Meses'].tolist() == ['nov', 'dez', 'jan', 'fev']
+    assert resultado['GDi'].tolist() == pytest.approx([9.9, 10.8, 10.7, 10.7])
+    # nov: 18 dias após a semeadura; fev: só os 18 dias necessários para completar CT
+    assert resultado['GDA_mes'].tolist() == pytest.approx([178.2, 334.8, 331.7, 192.6])
 
 
 def test_aplicacao_9_data_semeadura():
@@ -44,7 +49,9 @@ def test_aplicacao_9_data_semeadura():
                                     intervalo='M')
     assert resultado['data'].tolist() == [datetime.date(2023, 6, 22), datetime.date(2023, 5, 1),
                                           datetime.date(2023, 4, 2)]
-    assert resultado['GD_ciclo'].tolist() == pytest.approx([167.2, 443.1, 805.6])
+    assert resultado['GDA_ciclo'].tolist() == pytest.approx([167.2, 443.1, 805.6])
+    assert resultado['Meses'].tolist() == ['jun', 'mai', 'abr']
+    assert resultado['GDA_mes'].tolist() == pytest.approx([167.2, 275.9, 362.5])
 
 
 def test_maturacao_diaria_cruza_ano():
@@ -55,7 +62,7 @@ def test_maturacao_diaria_cruza_ano():
                                                 dia_semeadura=25, mes_semeadura=12)
     # 10 °C·dia por dia -> 10 dias contando o dia da semeadura
     assert resultado['data'].tolist()[-1] == datetime.date(2024, 1, 3)
-    assert resultado['GD_ciclo'].tolist()[-1] == pytest.approx(100.0)
+    assert resultado['GDA_ciclo'].tolist()[-1] == pytest.approx(100.0)
 
 
 def test_maturacao_decendial():
@@ -66,4 +73,4 @@ def test_maturacao_decendial():
                                                 mes_semeadura=3, intervalo='dec')
     # 100 + 100 + 50 -> 5º dia do 3º decêndio
     assert resultado['data'].tolist()[-1] == datetime.date(2023, 3, 25)
-    assert resultado['GD_ciclo'].tolist()[-1] == pytest.approx(250.0)
+    assert resultado['GDA_ciclo'].tolist()[-1] == pytest.approx(250.0)

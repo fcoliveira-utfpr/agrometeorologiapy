@@ -12,6 +12,12 @@ _MESES_PT = {
     1: 'janeiro', 2: 'fevereiro', 3: 'março', 4: 'abril', 5: 'maio', 6: 'junho',
     7: 'julho', 8: 'agosto', 9: 'setembro', 10: 'outubro', 11: 'novembro', 12: 'dezembro',
 }
+_MESES_ABREV = {m: nome[:3] for m, nome in _MESES_PT.items()}
+
+
+def _registro(mes, data, Tmed, GDi, GDA_mes, GDA_ciclo):
+    return {'Meses': _MESES_ABREV[mes], 'data': data, 'Tmed': Tmed, 'GDi': round(GDi, 2),
+            'GDA_mes': round(GDA_mes, 2), 'GDA_ciclo': round(GDA_ciclo, 2)}
 
 
 def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, intervalo='d', ano=2023):
@@ -45,8 +51,10 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
     Retorna
     -------
     resultado : pandas.DataFrame
-        Colunas 'data' e 'GD_ciclo' (GDA acumulado), da semeadura até a maturação.
-        A última linha é a data de maturação e o GDA acumulado até ela.
+        Uma linha por período: 'Meses' (mês abreviado), 'data', 'Tmed' (°C),
+        'GDi' (grau-dia diário, °C·dia), 'GDA_mes' (GDi x dias contados no
+        período, °C·dia) e 'GDA_ciclo' (GDA acumulado no ciclo, °C·dia).
+        Da semeadura até a maturação; a última linha é a data de maturação e o GDA acumulado até ela.
         O ano avança quando o ciclo cruza dezembro -> janeiro.
     """
     df = df.reset_index(drop=True)
@@ -116,11 +124,12 @@ def data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, interva
                 # No 1º mês (mensal) a contagem começa no dia seguinte à semeadura.
                 deslocamento = dias_necessarios if (pos == 0 and intervalo == 'M') else dias_necessarios - 1
                 data_final = data_periodo + timedelta(days=deslocamento)
-                acumulado = acumulado_anterior + GDi * dias_necessarios
-            registros.append({'data': data_final, 'GD_ciclo': round(acumulado, 2)})
+                GD_periodo = GDi * dias_necessarios
+                acumulado = acumulado_anterior + GD_periodo
+            registros.append(_registro(mes_row, data_final, Tmed, GDi, GD_periodo, acumulado))
             break
 
-        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+        registros.append(_registro(mes_row, data_periodo, Tmed, GDi, GD_periodo, acumulado))
 
     if data_final is None:
         raise ValueError("A soma térmica do df (um ciclo completo) não atinge CT.")
@@ -163,8 +172,10 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
     Retorna
     -------
     resultado : pandas.DataFrame
-        Colunas 'data' e 'GD_ciclo' (GDA acumulado), da maturação (referência)
-        até a semeadura. A última linha é a data de semeadura e o GDA
+        Uma linha por período: 'Meses' (mês abreviado), 'data', 'Tmed' (°C),
+        'GDi' (grau-dia diário, °C·dia), 'GDA_mes' (GDi x dias contados no
+        período, °C·dia) e 'GDA_ciclo' (GDA acumulado no ciclo, °C·dia).
+        Da maturação (referência) até a semeadura; a última linha é a data de semeadura e o GDA
         acumulado até ela. `ano` é o ano da maturação; o ano recua quando o
         ciclo cruza janeiro -> dezembro.
     """
@@ -236,11 +247,12 @@ def data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=
                 else:
                     fim_periodo = data_periodo + timedelta(days=n_periodo - 1)
                 data_sem = fim_periodo - timedelta(days=dias_necessarios - 1)
-                acumulado = acumulado_anterior + GDi * dias_necessarios
-            registros.append({'data': data_sem, 'GD_ciclo': round(acumulado, 2)})
+                GD_periodo = GDi * dias_necessarios
+                acumulado = acumulado_anterior + GD_periodo
+            registros.append(_registro(mes_row, data_sem, Tmed, GDi, GD_periodo, acumulado))
             break
 
-        registros.append({'data': data_periodo, 'GD_ciclo': round(acumulado, 2)})
+        registros.append(_registro(mes_row, data_periodo, Tmed, GDi, GD_periodo, acumulado))
 
     if data_sem is None:
         raise ValueError("A soma térmica do df (um ciclo completo) não atinge CT.")

@@ -464,6 +464,9 @@ período, conta-se apenas os dias necessários para completar `CT`
 ($\lceil (CT - GDA_{anterior}) / GD_i \rceil$), de modo que a última linha
 do DataFrame é a própria data de maturação. O ano avança ao cruzar
 dezembro → janeiro.
+O resultado tem uma linha por período, com as colunas `Meses` (mês
+abreviado), `data`, `Tmed`, `GDi` (grau-dia diário), `GDA_mes` ($GD_i \times$
+dias contados no período) e `GDA_ciclo` (acumulado no ciclo).
 
 **Onde:**
 - `df` — série climática (colunas `dia`, `mes`, `Tmed`, `Tmax`, `Tmin`), em ordem cronológica
