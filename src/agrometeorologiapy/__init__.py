@@ -3,8 +3,9 @@
 Funções para radiação solar, temperatura, umidade do ar, balanço de
 energia, evapotranspiração (Thornthwaite, Camargo-Maluf, Hargreaves-Samani,
 Priestley-Taylor, Penman-Monteith FAO-56), grau-dias, balanço hídrico
-(climatológico e de cultura) e classificação climática (Köppen-Geiger,
-Thornthwaite, Camargo e Holdridge).
+(climatológico e de cultura), classificação climática (Köppen-Geiger,
+Thornthwaite, Camargo e Holdridge) e produtividade potencial e atingível
+(Zona Agroecológica da FAO).
 """
 
 from ._trig import acosd, cosd, sind, tand
@@ -34,6 +35,16 @@ from .evapotranspiracao import (
     vento_2m,
 )
 from .grau_dias import data_maturacao_fisiologica, data_semeadura
+from .produtividade import (
+    CIAF,
+    CR,
+    PPBp,
+    cTc,
+    cTn,
+    produtividade_atingivel,
+    produtividade_potencial,
+    razao_insolacao,
+)
 from .radiacao import (
     Qg_angstrom,
     Qg_hargreaves,
@@ -85,4 +96,6 @@ __all__ = [
     "classificacao_thornthwaite", "classificacao_thornthwaite_grade",
     "classificacao_camargo", "classificacao_camargo_grade",
     "classificacao_holdridge", "classificacao_holdridge_grade",
+    "razao_insolacao", "cTn", "cTc", "PPBp", "CIAF", "CR",
+    "produtividade_potencial", "produtividade_atingivel",
 ]

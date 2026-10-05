@@ -8,8 +8,9 @@
 Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade
 do ar, balanço de energia, evapotranspiração (Thornthwaite, Camargo-Maluf,
 Hargreaves-Samani, Priestley-Taylor, Penman-Monteith FAO-56), grau-dias,
-balanço hídrico (climatológico e de cultura) e classificação climática
-(Köppen-Geiger, Thornthwaite, Camargo e Holdridge).
+balanço hídrico (climatológico e de cultura), classificação climática
+(Köppen-Geiger, Thornthwaite, Camargo e Holdridge) e produtividade potencial
+e atingível (Zona Agroecológica da FAO).
 
 ## Instalação
 
@@ -50,6 +51,7 @@ As funções também podem ser acessadas por submódulo (`amp.radiacao`,
 | `grau_dias` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
 | `balanco_hidrico` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
 | `classificacao_climatica` | Köppen-Geiger, Thornthwaite, Camargo e Holdridge, para um local ou em grade (rasters) |
+| `produtividade` | Zona Agroecológica da FAO: n/N, cTn e cTc (C3/C4), PPBp, CIAF, CR, produtividade potencial (PPf) e atingível (PA) |
 
 - [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md)) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
 - [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.

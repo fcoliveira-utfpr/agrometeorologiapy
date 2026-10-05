@@ -1,5 +1,17 @@
 # Changelog
 
+## [Não lançado]
+
+### Adicionado
+- Módulo `produtividade`: Modelo da Zona Agroecológica da FAO (Doorenbos &
+  Kassam, 1979). `razao_insolacao` (n/N por Angström-Prescott invertida),
+  `cTn` e `cTc` (correções de temperatura C3/C4 de Barbieri & Tuon, 1992),
+  `PPBp`, `CIAF`, `CR`, `produtividade_potencial` (PPf acumulada período a
+  período, em escala diária, decendial ou mensal, com decêndios parciais na
+  semeadura e na colheita) e `produtividade_atingivel` (PA e EC pelo
+  produtório por fase ou em etapa única). Constantes e valores tabelados são
+  parâmetros com os valores usuais como padrão.
+
 ## [0.2.1] - 2026-09-29
 
 ### Corrigido
