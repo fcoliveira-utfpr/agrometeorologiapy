@@ -377,7 +377,7 @@ def produtividade_potencial(df, lat, rota, IAF=5.0, Cc=0.35, U=13.0, intervalo='
 
     >>> df = pd.DataFrame({'dia': [1], 'mes': [1], 'Tmed': [26.5], 'Qg': [22.5]})
     >>> pp = produtividade_potencial(df, lat=-24.86, rota='C4', IAF=5.0, Cc=0.35, U=13)
-    >>> round(pp['PPBp'].iloc[0], 0), round(pp.attrs['PPf'], 0)
+    >>> round(float(pp['PPBp'].iloc[0]), 0), round(pp.attrs['PPf'], 0)
     (718.0, 722.0)
     """
     if intervalo not in ('d', 'dec', 'M'):
