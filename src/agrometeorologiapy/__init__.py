@@ -73,7 +73,7 @@ from .umidade import (
     umidade_saturacao,
 )
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "sind", "cosd", "tand", "acosd",

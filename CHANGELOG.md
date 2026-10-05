@@ -1,6 +1,6 @@
 # Changelog
 
-## [Não lançado]
+## [0.3.0] - 2026-10-04
 
 ### Adicionado
 - `relacao_n_N` (módulo `radiacao`): razão de insolação n/N pela mesma
@@ -13,6 +13,16 @@
   semeadura e na colheita) e `produtividade_atingivel` (PA e EC pelo
   produtório por fase ou em etapa única). Constantes e valores tabelados são
   parâmetros com os valores usuais como padrão.
+
+### Documentação
+- `docs/FORMULAS.md` e `.en.md`: seção 10 (produtividade) e `relacao_n_N`
+  na seção 2. As fórmulas em bloco passam para ```` ```math ````, porque o
+  GitHub não renderizava `$$ ... $$` colado a texto e engolia os escapes
+  (`\,`, `\;`, `\_`, `*`) dentro das fórmulas.
+- Tutorial do Colab: seções 2.14 (`relacao_n_N`) e 10 (produtividade).
+  Notebook de fórmulas: Capítulo 12 e Aplicações 12 a 14.
+- README: exemplos de uso de radiação, n/N, evapotranspiração, balanço
+  hídrico e produtividade.
 
 ## [0.2.1] - 2026-09-29
 
