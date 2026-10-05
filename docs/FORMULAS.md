@@ -244,6 +244,24 @@ Q_g = Q_o \cdot \left( a + b \cdot \frac{n}{N} \right) \quad [\text{MJ/m}^2]
 - $a$ — coeficiente de regressão derivado da latitude, adimensional
 - $b$ — coeficiente empírico de regressão, adimensional (padrão 0,52)
 
+### `relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True)`
+A mesma equação de Angström-Prescott de `Qg_angstrom`, resolvida para a razão
+de insolação — para quando há $Q_g$ (piranômetro ou bases em grade, como o
+BR-DWGD), mas não há heliógrafo:
+
+```math
+\frac{n}{N} = \frac{Q_g / Q_o - a}{b}, \qquad a = 0{,}29 \cos(\varphi)
+```
+
+**Onde:**
+- $n/N$ (retorno) — razão de insolação, adimensional; com `limitar=True`
+  (padrão), limitada entre 0 e 1
+- $Q_g$ (`Qg`) — irradiância solar global, em MJ/m² dia
+- $Q_o$ (`Qo`) — irradiância solar extraterrestre, em MJ/m² dia
+- $\varphi$ (`lat`) — latitude do local, em graus
+- $b$ — coeficiente empírico de regressão, adimensional (padrão 0,52)
+- $a$ — coeficiente linear, adimensional (padrão `None`: $0{,}29 \cos\varphi$)
+
 ### `Qg_hargreaves(Tmax, Tmin, Qo, k=0.16)`
 Equação de Hargreaves-Samani, sem depender de dados de insolação:
 
@@ -974,19 +992,10 @@ FAO (Doorenbos & Kassam, 1979), com as correções de temperatura de Barbieri &
 Tuon (1992), em Pereira et al. (2002). As constantes e os valores tabelados
 têm os valores usuais como padrão, mas todos são parâmetros da função.
 
-### `razao_insolacao(Qg, Qo, lat, a=None, b=0.52)`
-Inversão da equação de Angström-Prescott, para quando não há heliógrafo:
-
-```math
-\frac{n}{N} = \frac{Q_g / Q_o - a}{b}, \qquad a = 0{,}29 \cos\varphi
-```
-
-limitada entre 0 e 1.
-
-**Onde:**
-- `Qg`, `Qo` — irradiância global e extraterrestre, em MJ m⁻² d⁻¹
-- `lat` — latitude ($\varphi$), em graus
-- `a`, `b` — coeficientes de Angström-Prescott (padrão $0{,}29\cos\varphi$ e 0,52)
+### n/N
+Quando não há heliógrafo, a razão de insolação vem de `relacao_n_N` (seção 2),
+a equação de Angström-Prescott invertida. `produtividade_potencial` a usa
+quando o df traz `Qg` em vez de `nN`.
 
 ### `cTn(T, rota, T_limiar=16.5)` · `cTc(T, rota, T_limiar=16.5)`
 Correções de temperatura da fotossíntese para céu nublado ($cT_n$) e claro

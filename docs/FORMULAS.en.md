@@ -257,6 +257,24 @@ Q_g = Q_o \cdot \left( a + b \cdot \frac{n}{N} \right) \quad [\text{MJ/m}^2]
 - $a$ — regression coefficient derived from latitude, dimensionless
 - $b$ — empirical regression coefficient, dimensionless (default 0.52)
 
+### `relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True)`
+The same Ångström-Prescott equation as `Qg_angstrom`, solved for the sunshine
+ratio — for when there is $Q_g$ (pyranometer or gridded data such as
+BR-DWGD) but no sunshine recorder:
+
+```math
+\frac{n}{N} = \frac{Q_g / Q_o - a}{b}, \qquad a = 0{.}29 \cos(\varphi)
+```
+
+**Where:**
+- $n/N$ (return) — sunshine ratio, dimensionless; with `limitar=True`
+  (default), clipped to 0–1
+- $Q_g$ (`Qg`) — global solar irradiance, in MJ/m² day
+- $Q_o$ (`Qo`) — extraterrestrial solar irradiance, in MJ/m² day
+- $\varphi$ (`lat`) — latitude of the location, in degrees
+- $b$ — empirical regression coefficient, dimensionless (default 0.52)
+- $a$ — intercept, dimensionless (default `None`: $0{.}29 \cos\varphi$)
+
 ### `Qg_hargreaves(Tmax, Tmin, Qo, k=0.16)`
 Hargreaves-Samani equation, without requiring sunshine data:
 
@@ -1006,20 +1024,10 @@ Module `agrometeorologiapy.produtividade`. FAO Agro-Ecological Zone model
 Tuon (1992), in Pereira et al. (2002). Constants and tabulated values default
 to the usual values, but all of them are function parameters.
 
-### `razao_insolacao(Qg, Qo, lat, a=None, b=0.52)`
-Sunshine ratio from the inverted Angström-Prescott equation, for when there is
-no sunshine recorder:
-
-```math
-\frac{n}{N} = \frac{Q_g / Q_o - a}{b}, \qquad a = 0.29 \cos\varphi
-```
-
-clipped to 0–1.
-
-**Where:**
-- `Qg`, `Qo` — global and extraterrestrial irradiance, MJ m⁻² d⁻¹
-- `lat` — latitude ($\varphi$), degrees
-- `a`, `b` — Angström-Prescott coefficients (default $0.29\cos\varphi$ and 0.52)
+### n/N
+Without a sunshine recorder, the sunshine ratio comes from `relacao_n_N`
+(section 2), the inverted Ångström-Prescott equation. `produtividade_potencial`
+uses it when the df has `Qg` instead of `nN`.
 
 ### `cTn(T, rota, T_limiar=16.5)` · `cTc(T, rota, T_limiar=16.5)`
 Temperature corrections of photosynthesis for overcast ($cT_n$) and clear

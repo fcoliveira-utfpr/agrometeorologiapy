@@ -10,11 +10,15 @@ from calendar import monthrange
 import numpy as np
 import pandas as pd
 
-from ._trig import cosd
-from .radiacao import angulo_horario_nascer, declinacao_solar, fator_correcao_distancia, irradiancia_extraterrestre
+from .radiacao import (
+    angulo_horario_nascer,
+    declinacao_solar,
+    fator_correcao_distancia,
+    irradiancia_extraterrestre,
+    relacao_n_N,
+)
 
 __all__ = [
-    "razao_insolacao",
     "cTn",
     "cTc",
     "PPBp",
@@ -40,43 +44,6 @@ def _rota(rota):
     if r not in ("C3", "C4"):
         raise ValueError("rota deve ser 'C3' ou 'C4'.")
     return r
-
-
-def razao_insolacao(Qg, Qo, lat, a=None, b=0.52):
-    """
-    Razão de insolação (n/N) pela inversão da equação de Angström-Prescott,
-    para quando não há heliógrafo (ex.: bases em grade como o BR-DWGD).
-
-    n/N = (Qg/Qo - a) / b, limitada entre 0 e 1.
-
-    Parâmetros
-    ----------
-    Qg : float ou array_like
-        Irradiância solar global, em MJ/m² dia.
-    Qo : float ou array_like
-        Irradiância solar extraterrestre, em MJ/m² dia.
-    lat : float
-        Latitude do local, em graus (negativa no hemisfério sul).
-    a : float, opcional
-        Coeficiente linear de Angström-Prescott. Padrão None, que usa
-        a = 0,29 cos(lat) (Glover-McCulloch), como em `Qg_angstrom`.
-    b : float, opcional
-        Coeficiente angular de Angström-Prescott. Padrão 0,52.
-
-    Retorna
-    -------
-    nN : float ou array_like
-        Razão de insolação (adimensional, 0 a 1).
-
-    Exemplos
-    --------
-    >>> round(razao_insolacao(22.5, 42.96, -24.86), 3)
-    0.501
-    """
-    if a is None:
-        a = 0.29 * cosd(lat)
-    nN = np.clip((np.asarray(Qg, dtype=float) / np.asarray(Qo, dtype=float) - a) / b, 0.0, 1.0)
-    return _como_entrada(nN, Qg)
 
 
 def cTn(T, rota, T_limiar=16.5):
@@ -178,7 +145,7 @@ def PPBp(Qo, nN, cTc, cTn, a_c=107.2, b_c=8.604, a_n=31.7, b_n=5.234):
     Qo : float ou array_like
         Irradiância solar extraterrestre, em MJ/m² dia.
     nN : float ou array_like
-        Razão de insolação n/N (0 a 1). Ver `razao_insolacao`.
+        Razão de insolação n/N (0 a 1). Ver `relacao_n_N`.
     cTc, cTn : float ou array_like
         Correções de temperatura para céu claro e nublado. Ver `cTc` e `cTn`.
     a_c, b_c : float, opcional
@@ -433,7 +400,7 @@ def produtividade_potencial(df, lat, rota, IAF=5.0, Cc=0.35, U=13.0, intervalo='
     elif {'n', 'N'} <= set(res.columns):
         res['nN'] = (res['n'] / res['N']).clip(0, 1)
     elif 'Qg' in res.columns:
-        res['nN'] = razao_insolacao(res['Qg'], res['Qo'], lat, a=a, b=b)
+        res['nN'] = relacao_n_N(res['Qg'], res['Qo'], lat, b=b, a=a)
     else:
         raise ValueError("O df precisa de 'nN', de 'n' e 'N' ou de 'Qg'.")
 

@@ -43,7 +43,6 @@ from .produtividade import (
     cTn,
     produtividade_atingivel,
     produtividade_potencial,
-    razao_insolacao,
 )
 from .radiacao import (
     Qg_angstrom,
@@ -59,6 +58,7 @@ from .radiacao import (
     insolacao,
     irradiancia_extraterrestre,
     nda,
+    relacao_n_N,
 )
 from .temperatura import temp_media_estacao_automatica, temp_media_extremos
 from .umidade import (
@@ -80,7 +80,8 @@ __all__ = [
     "nda", "declinacao_solar", "angulo_horario", "angulo_zenital",
     "azimute_solar", "comprimento_sombra", "fotoperiodo",
     "angulo_horario_nascer", "fator_correcao_distancia",
-    "irradiancia_extraterrestre", "insolacao", "Qg_angstrom", "Qg_hargreaves",
+    "irradiancia_extraterrestre", "insolacao", "Qg_angstrom", "relacao_n_N",
+    "Qg_hargreaves",
     "temp_media_extremos", "temp_media_estacao_automatica",
     "es_tetens", "ea_umidade", "deficit_saturacao", "patm_altitude",
     "umidade_absoluta", "umidade_saturacao", "umidade_relativa",
@@ -96,6 +97,6 @@ __all__ = [
     "classificacao_thornthwaite", "classificacao_thornthwaite_grade",
     "classificacao_camargo", "classificacao_camargo_grade",
     "classificacao_holdridge", "classificacao_holdridge_grade",
-    "razao_insolacao", "cTn", "cTc", "PPBp", "CIAF", "CR",
+    "cTn", "cTc", "PPBp", "CIAF", "CR",
     "produtividade_potencial", "produtividade_atingivel",
 ]

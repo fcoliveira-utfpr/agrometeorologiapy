@@ -19,6 +19,7 @@ __all__ = [
     "irradiancia_extraterrestre",
     "insolacao",
     "Qg_angstrom",
+    "relacao_n_N",
     "Qg_hargreaves",
 ]
 
@@ -324,6 +325,54 @@ def Qg_angstrom(insolacao, N, Qo, lat, b=0.52):
     razao_insolacao = insolacao / N
     Qg = Qo * (a + b * razao_insolacao)
     return Qg
+
+
+def relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True):
+    """
+    Razão de insolação n/N pela equação de Angström-Prescott (variante de
+    Glover-McCulloch) invertida: a mesma fórmula de `Qg_angstrom`, resolvida
+    para n/N a partir da radiação solar global.
+
+    Útil quando há Qg (piranômetro ou bases em grade, como o BR-DWGD), mas
+    não há heliógrafo.
+
+    Parâmetros
+    ----------
+    Qg : float ou array_like
+        Irradiância solar global, em MJ/m² dia.
+    Qo : float ou array_like
+        Irradiância solar no topo da atmosfera (radiação extraterrestre), em MJ/m² dia.
+    lat : float
+        Latitude do local, em graus (negativa no hemisfério sul).
+    b : float, opcional
+        Coeficiente empírico de regressão (padrão 0,52).
+    a : float, opcional
+        Coeficiente linear. Padrão None, que usa a = 0,29 cos(lat), como em
+        `Qg_angstrom`.
+    limitar : bool, opcional
+        Se True (padrão), limita n/N entre 0 e 1. Valores fora dessa faixa
+        indicam Qg/Qo fora do alcance da equação (dia muito nublado ou
+        muito limpo para os coeficientes usados).
+
+    Retorna
+    -------
+    nN : float ou array_like
+        Razão de insolação n/N, adimensional.
+
+    Exemplos
+    --------
+    >>> round(relacao_n_N(22.5, 42.96, -24.86), 3)
+    0.501
+    >>> Qg = Qg_angstrom(9.0, 12.0, 30.0, -22.0)
+    >>> round(relacao_n_N(Qg, 30.0, -22.0), 3)
+    0.75
+    """
+    if a is None:
+        a = 0.29 * cosd(lat)
+    nN = (Qg / Qo - a) / b
+    if limitar:
+        nN = np.clip(nN, 0.0, 1.0)
+    return float(nN) if np.ndim(nN) == 0 else nN
 
 
 def Qg_hargreaves(Tmax, Tmin, Qo, k=0.16):

@@ -51,3 +51,20 @@ def test_aplicacao_2_radiacao_global():
     assert insol == pytest.approx(9.087185925749393)
     assert Qg_AP == pytest.approx(16.122204526178894)
     assert Qg_HS == pytest.approx(13.576593285203279)
+    # Inversa de Qg_angstrom: devolve a n/N usada (insol / N)
+    assert amp.relacao_n_N(Qg_AP, Qo, lat) == pytest.approx(insol / N)
+
+
+def test_relacao_n_N():
+    # 1º decêndio de janeiro em Santa Helena-PR (Aula 03)
+    assert amp.relacao_n_N(22.5, 42.96, -24.86) == pytest.approx(0.501, abs=1e-3)
+    # Limitada entre 0 e 1, a menos que limitar=False
+    assert amp.relacao_n_N(5.0, 40.0, -25.0) == 0.0
+    assert amp.relacao_n_N(5.0, 40.0, -25.0, limitar=False) < 0
+    assert amp.relacao_n_N(36.0, 40.0, -25.0) == 1.0
+    # Coeficientes como entrada
+    assert amp.relacao_n_N(20.0, 40.0, -25.0, b=0.5, a=0.25) == pytest.approx(0.5)
+    # Arrays e Series
+    import pandas as pd
+    s = amp.relacao_n_N(pd.Series([15.0, 20.0], index=['a', 'b']), 40.0, -25.0)
+    assert s.index.tolist() == ['a', 'b']

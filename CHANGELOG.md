@@ -3,9 +3,11 @@
 ## [Não lançado]
 
 ### Adicionado
+- `relacao_n_N` (módulo `radiacao`): razão de insolação n/N pela mesma
+  equação de `Qg_angstrom`, resolvida para n/N a partir de Qg (para quando
+  não há heliógrafo). Limitada entre 0 e 1 (`limitar=True`).
 - Módulo `produtividade`: Modelo da Zona Agroecológica da FAO (Doorenbos &
-  Kassam, 1979). `razao_insolacao` (n/N por Angström-Prescott invertida),
-  `cTn` e `cTc` (correções de temperatura C3/C4 de Barbieri & Tuon, 1992),
+  Kassam, 1979). `cTn` e `cTc` (correções de temperatura C3/C4 de Barbieri & Tuon, 1992),
   `PPBp`, `CIAF`, `CR`, `produtividade_potencial` (PPf acumulada período a
   período, em escala diária, decendial ou mensal, com decêndios parciais na
   semeadura e na colheita) e `produtividade_atingivel` (PA e EC pelo
