@@ -1,10 +1,25 @@
-"""Capítulo 8 — Balanço de energia."""
+"""Capítulo 8 — Balanço de energia.
 
-__all__ = ["saldo_radiacao", "boc_saldo", "bol_saldo"]
+API em português. A implementação está no núcleo em inglês,
+`agrometeorologiapy.en.energy`; aqui ficam só os nomes, a tradução
+dos parâmetros e a documentação em português.
+"""
+
+from ._i18n import tradutor
+from .en import energy as _en
+
+_traduzir = tradutor(__name__)
+
+__all__ = [
+    "saldo_radiacao",
+    "boc_saldo",
+    "bol_saldo",
+]
 
 
-def saldo_radiacao(BOC, BOL):
-    """
+saldo_radiacao = _traduzir(
+    _en.net_radiation, "saldo_radiacao", {'BOC': 'Rns', 'BOL': 'Rnl'},
+    doc="""
     Saldo de radiação (Rn), soma do balanço de ondas curtas
     (BOC) com o balanço de ondas longas (BOL).
 
@@ -22,12 +37,12 @@ def saldo_radiacao(BOC, BOL):
     -------
     Rn : float
         Saldo de radiação, em MJ/m² dia (ou W/m²).
-    """
-    return BOC + BOL
+    """)
 
 
-def boc_saldo(Qg, r=0.25):
-    """
+boc_saldo = _traduzir(
+    _en.net_shortwave_radiation, "boc_saldo", {'Qg': 'Rs', 'r': 'albedo'},
+    doc="""
     Balanço de ondas curtas (BOC): irradiância solar global
     incidente menos a parcela refletida pela superfície (albedo).
 
@@ -42,12 +57,12 @@ def boc_saldo(Qg, r=0.25):
     -------
     BOC : float
         Balanço de ondas curtas, mesma unidade de Qg.
-    """
-    return Qg * (1 - r)
+    """)
 
 
-def bol_saldo(Tmax, Tmin, ea, Qg, Qg_cs):
-    """
+bol_saldo = _traduzir(
+    _en.net_longwave_radiation, "bol_saldo", {'Qg': 'Rs', 'Qg_cs': 'Rso'},
+    doc="""
     Balanço de radiação de onda longa (BOL), segundo a equação de
     Stefan-Boltzmann corrigida pela FAO-56.
 
@@ -76,11 +91,4 @@ def bol_saldo(Tmax, Tmin, ea, Qg, Qg_cs):
     BOL : float
         Balanço de radiação de onda longa, em MJ/m² (valor negativo,
         representando perda líquida de energia por emissão terrestre).
-    """
-    Tmax_K = Tmax + 273.15
-    Tmin_K = Tmin + 273.15
-    termo_temp = 4.903e-9 * ((Tmax_K ** 4 + Tmin_K ** 4) / 2)
-    termo_umidade = 0.34 - 0.14 * ea ** 0.5
-    termo_nebulosidade = 1.35 * (Qg / Qg_cs) - 0.35
-    BOL = -(termo_temp * termo_umidade * termo_nebulosidade)
-    return BOL
+    """)

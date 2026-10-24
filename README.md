@@ -25,6 +25,9 @@ tutorial direto no Google Colab:
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb)
 
+🇺🇸 **English:** the same tour with the English API —
+[`examples/tutorial_colab_en.ipynb`](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb).
+
 ## Uso rápido
 
 ```python
@@ -100,22 +103,40 @@ são parâmetros com o valor usual como padrão (ex.: `U=13`, `b=0.52`).
 As funções também podem ser acessadas por submódulo (`amp.radiacao`,
 `amp.umidade`, `amp.evapotranspiracao`, etc.).
 
+### API em inglês / English API
+
+Todas as funções também existem com nomes em inglês, seguindo a terminologia
+da FAO-56, em `agrometeorologiapy.en`. As duas APIs compartilham uma única
+implementação e dão resultados idênticos; a API em português é permanente.
+
+```python
+from agrometeorologiapy import en as agm
+
+J = agm.day_of_year(5, 1)
+decl = agm.solar_declination(J)
+ws = agm.sunset_hour_angle(-24.86, decl)
+Ra = agm.extraterrestrial_radiation(-24.86, decl, ws, agm.inverse_relative_distance(J))
+nN = agm.relative_sunshine_duration(Rs=22.5, Ra=Ra, lat=-24.86)   # 0.501
+```
+
+Correspondência completa dos nomes: [`docs/API_PT_EN.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/API_PT_EN.md).
+
 ## Módulos
 
-| Módulo | Conteúdo |
+| Módulo (pt · en) | Conteúdo |
 | --- | --- |
-| `radiacao` | NDA, declinação solar, ângulo horário, ângulo zenital, azimute solar, fotoperíodo, irradiância extraterrestre, radiação global (Angström-Prescott, Hargreaves-Samani) e razão de insolação n/N (`relacao_n_N`, Angström-Prescott invertida) |
-| `temperatura` | Temperatura média diária (extremos e estação automática) |
-| `umidade` | Pressão de saturação/parcial de vapor, déficit de saturação, pressão atmosférica, umidade absoluta/relativa/de saturação, ponto de orvalho, constante psicrométrica |
-| `energia` | Saldo de radiação, balanço de ondas curtas e longas |
-| `evapotranspiracao` | ETP por Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor; ETo por Penman-Monteith FAO-56; conversão do vento para 2 m |
-| `grau_dias` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
-| `balanco_hidrico` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
-| `classificacao_climatica` | Köppen-Geiger, Thornthwaite, Camargo e Holdridge, para um local ou em grade (rasters) |
-| `produtividade` | Zona Agroecológica da FAO (Doorenbos & Kassam): correções de temperatura cTn e cTc (C3/C4), PPBp, CIAF, CR, produtividade potencial (PPf, em escala diária, decendial ou mensal) e atingível (PA, por fase ou em etapa única) com eficiência climática |
+| `radiacao` · `en.radiation` | NDA, declinação solar, ângulo horário, ângulo zenital, azimute solar, fotoperíodo, irradiância extraterrestre, radiação global (Angström-Prescott, Hargreaves-Samani) e razão de insolação n/N (`relacao_n_N`, Angström-Prescott invertida) |
+| `temperatura` · `en.temperature` | Temperatura média diária (extremos e estação automática) |
+| `umidade` · `en.humidity` | Pressão de saturação/parcial de vapor, déficit de saturação, pressão atmosférica, umidade absoluta/relativa/de saturação, ponto de orvalho, constante psicrométrica |
+| `energia` · `en.energy` | Saldo de radiação, balanço de ondas curtas e longas |
+| `evapotranspiracao` · `en.evapotranspiration` | ETP por Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor; ETo por Penman-Monteith FAO-56; conversão do vento para 2 m |
+| `grau_dias` · `en.degree_days` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
+| `balanco_hidrico` · `en.water_balance` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
+| `classificacao_climatica` · `en.climate_classification` | Köppen-Geiger, Thornthwaite, Camargo e Holdridge, para um local ou em grade (rasters) |
+| `produtividade` · `en.crop_yield` | Zona Agroecológica da FAO (Doorenbos & Kassam): correções de temperatura cTn e cTc (C3/C4), PPBp, CIAF, CR, produtividade potencial (PPf, em escala diária, decendial ou mensal) e atingível (PA, por fase ou em etapa única) com eficiência climática |
 
 - [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md)) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
-- [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função.
+- [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb), com a API em inglês).
 - [`examples/formulas_agrometeorologia.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/formulas_agrometeorologia.ipynb) — notebook original de desenvolvimento, com a dedução teórica de cada fórmula.
 
 ## Desenvolvimento

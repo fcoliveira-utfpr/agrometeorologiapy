@@ -1,9 +1,17 @@
-"""Capítulo 9 — Evapo(transpi)ração."""
+"""Capítulo 9 — Evapotranspiração.
 
-import numpy as np
+API em português. A implementação está no núcleo em inglês,
+`agrometeorologiapy.en.evapotranspiration`; aqui ficam só os nomes, a tradução
+dos parâmetros e a documentação em português.
+"""
 
-from ._trig import acosd, cosd, sind
-from .umidade import es_tetens
+from ._i18n import tradutor
+from .en import evapotranspiration as _en
+
+_COLUNAS_SAIDA = {'T_mean_C': 'T_media_C', 'PET_mm_month': 'ETP_mm_mes',
+                  'Ra_MJ_m2day': 'Qo_MJ_m2dia', 'Ra_mm_day': 'Qo_mm_dia'}
+
+_traduzir = tradutor(__name__)
 
 __all__ = [
     "thornthwaite_mensal",
@@ -16,8 +24,12 @@ __all__ = [
 ]
 
 
-def thornthwaite_mensal(df, col_T='T_media_C', lat=None):
-    """
+thornthwaite_mensal = _traduzir(
+    _en.pet_thornthwaite, "thornthwaite_mensal", {},
+    valores={'col_T': {'T_media_C': 'T_mean_C'}},
+    colunas_entrada={'T_media_C': 'T_mean_C'},
+    colunas_saida=_COLUNAS_SAIDA,
+    doc="""
     Evapotranspiração potencial mensal (ETP) pelo método de Thornthwaite (1948).
 
     Estima a ETP a partir da temperatura média mensal do ar, corrigida pelo
@@ -39,32 +51,15 @@ def thornthwaite_mensal(df, col_T='T_media_C', lat=None):
     df : pandas.DataFrame
         Cópia do DataFrame de entrada com a coluna adicional 'ETP_mm_mes'
         (evapotranspiração potencial corrigida, em mm/mês).
-    """
-    df = df.copy()
-    T_mensal = df[col_T].to_numpy(dtype=float)
-    dias_mes = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-    dia_juliano_medio = np.array([17, 47, 75, 105, 135, 162, 198, 228, 258, 288, 318, 344])
-
-    i_mensal = np.where(T_mensal > 0, (T_mensal / 5) ** 1.514, 0)
-    I = i_mensal.sum()
-    a = 6.75e-7 * I ** 3 - 7.71e-5 * I ** 2 + 1.792e-2 * I + 0.49239
-    ETP_nc = np.where(T_mensal > 0, 16 * (10 * T_mensal / I) ** a, 0)
-    # Acima de 26,5 °C o método original usa tabela, e não a equação exponencial.
-    ETP_nc = np.where(T_mensal >= 26.5, -415.85 + 32.24 * T_mensal - 0.43 * T_mensal ** 2, ETP_nc)
-
-    declinacao = 23.45 * sind(360 * (284 + dia_juliano_medio) / 365)
-    tand_lat = sind(lat) / cosd(lat)
-    tand_dec = sind(declinacao) / cosd(declinacao)
-    ws = acosd(-tand_lat * tand_dec)
-    N = (2 / 15) * ws
-    K = (N / 12) * (dias_mes / 30)
-
-    df['ETP_mm_mes'] = np.round(ETP_nc * K, 2)
-    return df
+    """)
 
 
-def camargo_maluf_mensal(df, col_T='T_media_C', lat=None):
-    """
+camargo_maluf_mensal = _traduzir(
+    _en.pet_camargo, "camargo_maluf_mensal", {},
+    valores={'col_T': {'T_media_C': 'T_mean_C'}},
+    colunas_entrada={'T_media_C': 'T_mean_C'},
+    colunas_saida=_COLUNAS_SAIDA,
+    doc="""
     Evapotranspiração potencial mensal (ETP) pelo método de Camargo (1971),
     com o coeficiente F modificado por Maluf (Camargo et al., 1999).
 
@@ -91,50 +86,12 @@ def camargo_maluf_mensal(df, col_T='T_media_C', lat=None):
         Cópia do DataFrame de entrada com as colunas adicionais 'Qo_MJ_m2dia'
         (radiação extraterrestre, MJ/m² dia), 'Qo_mm_dia' (equivalente de
         evaporação, mm/dia) e 'ETP_mm_mes' (ETP mensal, em mm/mês).
-    """
-    df = df.copy()
-    T_mensal = df[col_T].to_numpy(dtype=float)
-    dias_mes = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-    J = np.array([17, 47, 75, 105, 135, 162, 198, 228, 258, 288, 318, 344])  # dia juliano médio
-
-    # Declinação solar (graus)
-    declinacao = 23.45 * np.sin(np.radians(360 * (284 + J) / 365))
-
-    # Ângulo horário do nascer do Sol (graus) - eq. 5.20
-    tan_lat = np.sin(np.radians(lat)) / np.cos(np.radians(lat))
-    tan_dec = np.sin(np.radians(declinacao)) / np.cos(np.radians(declinacao))
-    Hn = np.degrees(np.arccos(np.clip(-tan_lat * tan_dec, -1, 1)))
-
-    # Correção da distância Terra-Sol (d/D)^2 - eq. 5.30
-    dD2 = 1 + 0.033 * np.cos(np.radians(360 * J / 365))
-
-    # Irradiância solar extraterrestre diária (Qo), em MJ/m² dia
-    hn_rad = np.radians(Hn)
-    Qo_MJ = 37.6 * dD2 * (
-        hn_rad * np.sin(np.radians(lat)) * np.sin(np.radians(declinacao))
-        + np.cos(np.radians(lat)) * np.cos(np.radians(declinacao)) * np.sin(np.radians(Hn))
-    )
-    Qo_mm = 0.408 * Qo_MJ  # equivalente de evaporação, mm/dia
-
-    # Coeficiente F em função da temperatura média anual (Camargo modif. Maluf)
-    Tmed_anual = T_mensal.mean()
-    if Tmed_anual < 23:
-        F = 0.01
-    elif Tmed_anual < 24:
-        F = 0.0105
-    else:
-        F = 0.011
-
-    ETP = F * Qo_mm * T_mensal * dias_mes
-
-    df['Qo_MJ_m2dia'] = np.round(Qo_MJ, 2)
-    df['Qo_mm_dia'] = np.round(Qo_mm, 2)
-    df['ETP_mm_mes'] = np.round(ETP, 2)
-    return df
+    """)
 
 
-def etp_hargreaves_samani(Qo, Tmax, Tmin, Tmed):
-    """
+etp_hargreaves_samani = _traduzir(
+    _en.pet_hargreaves_samani, "etp_hargreaves_samani", {'Qo': 'Ra', 'Tmed': 'Tmean'},
+    doc="""
     Evapotranspiração potencial pelo método de
     Hargreaves & Samani (1985), que usa a amplitude térmica diária como
     substituto indireto da nebulosidade/radiação solar efetiva.
@@ -154,13 +111,12 @@ def etp_hargreaves_samani(Qo, Tmax, Tmin, Tmed):
     -------
     ETP : float
         Evapotranspiração potencial, em mm/dia.
-    """
-    Qo_mm = 0.408 * Qo  # equivalente de evaporação, mm/dia
-    return 0.0023 * Qo_mm * (Tmax - Tmin) ** 0.5 * (Tmed + 17.8)
+    """)
 
 
-def declive_pressao_vapor(T_ar):
-    """
+declive_pressao_vapor = _traduzir(
+    _en.slope_vapour_pressure_curve, "declive_pressao_vapor", {'T_ar': 'T'},
+    doc="""
     Declive da curva de pressão de saturação de vapor (Delta), na
     temperatura do ar considerada.
 
@@ -177,13 +133,12 @@ def declive_pressao_vapor(T_ar):
     -------
     Delta : float
         Declive da curva de pressão de saturação de vapor, em kPa/°C.
-    """
-    es = es_tetens(T_ar)
-    return 4098 * es / (T_ar + 237.3) ** 2
+    """)
 
 
-def etp_priestley_taylor(Rn, G, Delta, gamma, alfa=1.26):
-    """
+etp_priestley_taylor = _traduzir(
+    _en.pet_priestley_taylor, "etp_priestley_taylor", {'alfa': 'alpha'},
+    doc="""
     Evapotranspiração potencial pelo método de Priestley & Taylor (1972).
 
     Simplificação do termo aerodinâmico da equação de Penman, válida para
@@ -209,13 +164,10 @@ def etp_priestley_taylor(Rn, G, Delta, gamma, alfa=1.26):
     -------
     ETP : float
         Evapotranspiração potencial, em mm/dia.
-    """
-    lambda_v = 2.45  # calor latente de vaporização, MJ/kg
-    return alfa * (Delta / (Delta + gamma)) * (Rn - G) / lambda_v
+    """)
 
 
-def vento_2m(uz, z):
-    """
+vento_2m = _traduzir(_en.wind_speed_2m, "vento_2m", {}, doc="""
     Converte a velocidade do vento medida a uma altura qualquer para a
     altura-padrão de 2 m, pelo perfil logarítmico do vento (FAO-56, eq. 47).
 
@@ -233,12 +185,12 @@ def vento_2m(uz, z):
     -------
     u2 : float ou array
         Velocidade do vento a 2 m de altura, em m/s.
-    """
-    return uz * 4.87 / np.log(67.8 * z - 5.42)
+    """)
 
 
-def eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma):
-    """
+eto_penman_monteith_fao56 = _traduzir(
+    _en.eto_penman_monteith, "eto_penman_monteith_fao56", {'Tmed': 'Tmean'},
+    doc="""
     Evapotranspiração de referência (ETo) pela equação de
     Penman-Monteith, padronizada pelo boletim FAO-56 (Allen et al., 1998).
 
@@ -270,7 +222,4 @@ def eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma):
     -------
     ETo : float
         Evapotranspiração de referência, em mm/dia.
-    """
-    numerador = 0.408 * Delta * (Rn - G) + gamma * (900 / (Tmed + 273)) * u2 * (es - ea)
-    denominador = Delta + gamma * (1 + 0.34 * u2)
-    return numerador / denominador
+    """)

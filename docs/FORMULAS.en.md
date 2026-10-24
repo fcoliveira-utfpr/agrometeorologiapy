@@ -6,13 +6,15 @@ Mathematical documentation for every public function in `agrometeorologiapy`:
 the original formula, what each variable means, and the expected unit. For
 installation and usage examples, see the [README](../README.md); for a
 runnable walkthrough, see
-[`examples/tutorial_colab.ipynb`](../examples/tutorial_colab.ipynb).
+[`examples/tutorial_colab_en.ipynb`](../examples/tutorial_colab_en.ipynb).
 
-> ℹ️ **Note on naming:** the package's function and parameter names stay in
-> Portuguese (e.g. `declinacao_solar`, `Tmax`, `umidade_relativa`) — that is
-> the actual public API, matching the source textbook. This document
-> translates the surrounding explanation into English, not the identifiers
-> you call in code.
+> ℹ️ **Note on naming:** this document describes the English API,
+> `agrometeorologiapy.en` (`from agrometeorologiapy import en as agm`), the
+> core implementation of the package. Every function is also available with
+> a Portuguese name at the top level (`import agrometeorologiapy as amp`),
+> shown next to each heading as "pt: ...". Terms and symbols follow FAO-56
+> (Allen et al., 1998) wherever they exist. See [API_PT_EN.md](API_PT_EN.md)
+> for the full name mapping.
 
 **Primary source:** Pereira, Angelocci & Sentelhas (2002) — *Agrometeorologia:
 fundamentos e aplicações práticas* ("Agrometeorology: fundamentals and
@@ -31,7 +33,7 @@ FAO-56) for the evapotranspiration methods.
 - [4. Air Humidity](#4-air-humidity)
 - [5. Energy Balance](#5-energy-balance)
 - [6. Evapotranspiration](#6-evapotranspiration)
-- [7. Growing Degree-Days](#7-growing-degree-days)
+- [7. Growing Degree Days](#7-growing-degree-days)
 - [8. Water Balance](#8-water-balance)
 - [9. Climate Classification](#9-climate-classification)
 - [10. Potential and Attainable Yield](#10-potential-and-attainable-yield)
@@ -80,48 +82,49 @@ Returns the corresponding angle in degrees.
 
 ## 2. Solar Radiation
 
-Module `agrometeorologiapy.radiacao`.
+Module `agrometeorologiapy.en.radiation` (Portuguese API:
+`agrometeorologiapy.radiacao`; names in parentheses). Terms and symbols
+follow FAO-56 (Allen et al., 1998, ch. 3).
 
-### `nda(dia, mes, ano=2023)`
-Day of the Year number (NDA, from the Portuguese *Número do Dia do Ano*):
-the ordinal position of the day within the year (January 1st = 1, December
+### `day_of_year(day, month, year=2023)` · pt: `nda`
+Ordinal position of the day within the year (J; January 1st = 1, December
 31st = 365 or 366). Computed via `datetime.timetuple().tm_yday`, no closed
 formula.
 
 **Where:**
-- `dia` — day of the month, integer (1–31)
-- `mes` — month, integer (1–12)
-- `ano` — year, integer (default 2023, non-leap)
-- `NDA` (return) — day-of-year number, integer (1–366)
+- `day` — day of the month, integer (1–31)
+- `month` — month, integer (1–12)
+- `year` — year, integer (default 2023, non-leap)
+- $J$ (return) — day of the year, integer (1–366)
 
-### `declinacao_solar(NDA)`
+### `solar_declination(doy)` · pt: `declinacao_solar`
 Sinusoidal approximation of solar declination δ, resulting from the tilt of
 Earth's rotation axis (23.45°):
 
 ```math
-\delta = 23{.}45 \cdot \sin\left(\frac{360 (NDA - 80)}{365}\right) \quad [\text{degrees}]
+\delta = 23{.}45 \cdot \sin\left(\frac{360 (J - 80)}{365}\right) \quad [\text{degrees}]
 ```
 
 **Where:**
 - $\delta$ (return) — solar declination for the day, in degrees
-- $NDA$ — day-of-year number (1–366)
+- $J$ (`doy`) — day of the year (1–366)
 
-### `angulo_horario(hora, minuto=0)`
+### `hour_angle(hour, minute=0)` · pt: `angulo_horario`
 
 ```math
-h = (\text{hora} + \tfrac{\text{minuto}}{60} - 12) \times 15 \quad [\text{degrees}]
+\omega = (\text{hour} + \tfrac{\text{minute}}{60} - 12) \times 15 \quad [\text{degrees}]
 ```
 
 (15°/hour, zero at local solar noon, negative in the morning, positive in
 the afternoon)
 
 **Where:**
-- $h$ (return) — hour angle, in degrees
-- `hora` — hour of the day, integer (0–23)
-- `minuto` — minute of the hour, integer (0–59)
+- $\omega$ (return) — hour angle, in degrees
+- `hour` — hour of the day, integer (0–23)
+- `minute` — minute of the hour, integer (0–59)
 
-### `angulo_zenital(lat, declinacao)`
-Solar zenith angle at local solar noon (h = 0°):
+### `solar_zenith_angle(lat, declination)` · pt: `angulo_zenital`
+Solar zenith angle at local solar noon ($\omega = 0°$):
 
 ```math
 \cos Z = \sin(\varphi)\sin(\delta) + \cos(\varphi)\cos(\delta)
@@ -138,9 +141,9 @@ error from rounding)
 - $Z$ (return) — zenith angle, in degrees
 - $\varphi$ (`lat`) — latitude of the location, in degrees (negative in the
   southern hemisphere)
-- $\delta$ (`declinacao`) — solar declination for the day, in degrees
+- $\delta$ (`declination`) — solar declination for the day, in degrees
 
-### `azimute_solar(lat, declinacao, Z)`
+### `solar_azimuth(lat, declination, zenith)` · pt: `azimute_solar`
 Horizontal direction of the Sun relative to the North-South line:
 
 ```math
@@ -154,257 +157,265 @@ Horizontal direction of the Sun relative to the North-South line:
 **Where:**
 - $\alpha$ (return) — solar azimuth, in degrees
 - $\varphi$ (`lat`) — latitude of the location, in degrees
-- $\delta$ (`declinacao`) — solar declination for the day, in degrees
-- $Z$ — zenith angle, in degrees (previous equation)
+- $\delta$ (`declination`) — solar declination for the day, in degrees
+- $Z$ (`zenith`) — zenith angle, in degrees (previous equation)
 
-### `comprimento_sombra(d, Z)`
-Length of the shadow cast by an object of height `d`:
+### `shadow_length(height, zenith)` · pt: `comprimento_sombra`
+Length of the shadow cast by an object of height $d$:
 
 ```math
 S = d \cdot \tan(Z)
 ```
 
 **Where:**
-- $S$ (return) — shadow length, in the same unit as `d`
-- `d` — height of the object, in meters
-- $Z$ — zenith angle at the instant considered, in degrees
+- $S$ (return) — shadow length, in the same unit as `height`
+- $d$ (`height`) — height of the object, e.g. in meters
+- $Z$ (`zenith`) — zenith angle at the instant considered, in degrees
 
-### `fotoperiodo(Hn)`
-Day length (twice the sunrise hour angle, converted to hours):
+### `daylight_hours(ws)` · pt: `fotoperiodo`
+Daylight hours, the maximum possible duration of sunshine (FAO-56 eq. 34,
+with $\omega_s$ in degrees):
 
 ```math
-N = \frac{2 \, H_n}{15} \quad [\text{hours}]
+N = \frac{2 \, \omega_s}{15} \quad [\text{hours}]
 ```
 
 **Where:**
-- $N$ (return) — photoperiod (day length), in hours
-- $H_n$ (`Hn`) — sunrise hour angle, in degrees
+- $N$ (return) — daylight hours, in hours
+- $\omega_s$ (`ws`) — sunset hour angle, in degrees
 
-### `angulo_horario_nascer(lat, declinacao)`
+### `sunset_hour_angle(lat, declination)` · pt: `angulo_horario_nascer`
 Obtained by setting $Z = 90°$ (cos Z = 0) in the general zenith-angle
-equation:
+equation (FAO-56 eq. 25). By symmetry, it equals the sunrise hour angle in
+absolute value:
 
 ```math
-H_n = \arccos(-\tan(\varphi)\tan(\delta))
+\omega_s = \arccos(-\tan(\varphi)\tan(\delta))
 ```
 
 **Where:**
-- $H_n$ (return) — sunrise hour angle, in degrees
+- $\omega_s$ (return) — sunset hour angle, in degrees
 - $\varphi$ (`lat`) — latitude of the location, in degrees
-- $\delta$ (`declinacao`) — solar declination for the day, in degrees
+- $\delta$ (`declination`) — solar declination for the day, in degrees
 
-### `fator_correcao_distancia(NDA)`
-Correction $(d/D)^2$ for the eccentricity of Earth's orbit:
+### `inverse_relative_distance(doy)` · pt: `fator_correcao_distancia`
+Inverse relative distance Earth-Sun (FAO-56 eq. 23), the correction
+$(d/D)^2$ for the eccentricity of Earth's orbit:
 
 ```math
-\left(\frac{d}{D}\right)^2 = 1 + 0{.}033 \cdot \cos\left(\frac{360 \cdot NDA}{365}\right)
+d_r = 1 + 0{.}033 \cdot \cos\left(\frac{360 \cdot J}{365}\right)
 ```
 
 **Where:**
-- $(d/D)^2$ (return) — Earth-Sun distance correction factor, dimensionless
-- $NDA$ — day-of-year number (1–366)
+- $d_r$ (return) — inverse relative distance Earth-Sun, dimensionless
+- $J$ (`doy`) — day of the year (1–366)
 
-### `irradiancia_extraterrestre(lat, declinacao, Hn, dD2)`
-Extraterrestrial global solar irradiance at the top of the atmosphere (Qo):
+### `extraterrestrial_radiation(lat, declination, ws, dr)` · pt: `irradiancia_extraterrestre`
+Daily extraterrestrial radiation on a horizontal surface at the top of the
+atmosphere (FAO-56 eq. 21, with $37{.}6 \approx 24 \cdot 60 \cdot 0{.}0820/\pi$):
 
 ```math
-Q_o = 37{.}6 \cdot \left(\frac{d}{D}\right)^2 \cdot \left[ H_{n,\text{rad}} \sin(\varphi)\sin(\delta) + \cos(\varphi)\cos(\delta)\sin(H_n) \right] \quad [\text{MJ/m}^2\text{day}]
+R_a = 37{.}6 \cdot d_r \cdot \left[ \omega_{s,\text{rad}} \sin(\varphi)\sin(\delta) + \cos(\varphi)\cos(\delta)\sin(\omega_s) \right] \quad [\text{MJ m}^{-2}\text{day}^{-1}]
 ```
 
 **Where:**
-- $Q_o$ (return) — daily extraterrestrial global solar irradiance, in
-  MJ/m² day
+- $R_a$ (return) — extraterrestrial radiation, in MJ m⁻² day⁻¹
 - $\varphi$ (`lat`) — latitude of the location, in degrees
-- $\delta$ (`declinacao`) — solar declination for the day, in degrees
-- $H_n$ (`Hn`) — sunrise hour angle, in degrees; $H_{n,\text{rad}}$ is the
-  same value converted to radians, used only in that term
-- $(d/D)^2$ (`dD2`) — Earth-Sun distance correction factor, dimensionless
+- $\delta$ (`declination`) — solar declination for the day, in degrees
+- $\omega_s$ (`ws`) — sunset hour angle, in degrees; $\omega_{s,\text{rad}}$
+  is the same value in radians, used only in that term
+- $d_r$ (`dr`) — inverse relative distance Earth-Sun, dimensionless
 
-### `insolacao(N, Tmax, Tmin, lat, k=0.19)`
-Estimate of the number of hours of sunshine (n) from the daily thermal
-amplitude:
+### `sunshine_duration(N, Tmax, Tmin, lat, k=0.19)` · pt: `insolacao`
+Estimate of the actual duration of sunshine (n) from the daily temperature
+range:
 
 ```math
 n = \frac{N}{0{.}52} \cdot \left[ k \sqrt{T_{max} - T_{min}} - 0{.}29 \cos(\varphi) \right] \quad [\text{hours}]
 ```
 
 **Where:**
-- $n$ (return) — estimated number of hours of sunshine, in hours
-- $N$ — photoperiod for the day, in hours
+- $n$ (return) — estimated actual duration of sunshine, in hours
+- $N$ — daylight hours, in hours
 - $T_{max}$, $T_{min}$ (`Tmax`, `Tmin`) — daily maximum and minimum
   temperatures, in °C
 - $\varphi$ (`lat`) — latitude of the location, in degrees
 - $k$ — empirical coefficient, dimensionless (0.16 for inland regions, 0.19
   — the function's default — for coastal regions)
 
-### `Qg_angstrom(insolacao, N, Qo, lat, b=0.52)`
-Ångström-Prescott equation (Glover-McCulloch variant):
+### `solar_radiation_angstrom(n, N, Ra, lat, b=0.52)` · pt: `Qg_angstrom`
+Angstrom formula (FAO-56 eq. 35), in the Glover-McCulloch variant:
 
 ```math
 a = 0{.}29 \cos(\varphi)
 ```
 
 ```math
-Q_g = Q_o \cdot \left( a + b \cdot \frac{n}{N} \right) \quad [\text{MJ/m}^2]
+R_s = R_a \cdot \left( a + b \cdot \frac{n}{N} \right) \quad [\text{MJ m}^{-2}\text{day}^{-1}]
 ```
 
 **Where:**
-- $Q_g$ (return) — global solar irradiance, in MJ/m²
-- $n$ (`insolacao`) — measured hours of sunshine for the day, in hours
-- $N$ — photoperiod for the day, in hours
-- $Q_o$ (`Qo`) — extraterrestrial solar irradiance, in MJ/m²
+- $R_s$ (return) — solar radiation, in MJ m⁻² day⁻¹
+- $n$ — actual duration of sunshine for the day, in hours
+- $N$ — daylight hours, in hours
+- $R_a$ (`Ra`) — extraterrestrial radiation, in MJ m⁻² day⁻¹
 - $\varphi$ (`lat`) — latitude of the location, in degrees
 - $a$ — regression coefficient derived from latitude, dimensionless
 - $b$ — empirical regression coefficient, dimensionless (default 0.52)
 
-### `relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True)`
-The same Ångström-Prescott equation as `Qg_angstrom`, solved for the sunshine
-ratio — for when there is $Q_g$ (pyranometer or gridded data such as
-BR-DWGD) but no sunshine recorder:
+### `relative_sunshine_duration(Rs, Ra, lat, b=0.52, a=None, clip=True)` · pt: `relacao_n_N`
+The same Angstrom formula as `solar_radiation_angstrom`, solved for the
+relative sunshine duration — for when there is $R_s$ (pyranometer or
+gridded data such as BR-DWGD) but no sunshine recorder:
 
 ```math
-\frac{n}{N} = \frac{Q_g / Q_o - a}{b}, \qquad a = 0{.}29 \cos(\varphi)
+\frac{n}{N} = \frac{R_s / R_a - a}{b}, \qquad a = 0{.}29 \cos(\varphi)
 ```
 
 **Where:**
-- $n/N$ (return) — sunshine ratio, dimensionless; with `limitar=True`
-  (default), clipped to 0–1
-- $Q_g$ (`Qg`) — global solar irradiance, in MJ/m² day
-- $Q_o$ (`Qo`) — extraterrestrial solar irradiance, in MJ/m² day
+- $n/N$ (return) — relative sunshine duration, dimensionless; with
+  `clip=True` (default), clipped to 0–1
+- $R_s$ (`Rs`) — solar radiation, in MJ m⁻² day⁻¹
+- $R_a$ (`Ra`) — extraterrestrial radiation, in MJ m⁻² day⁻¹
 - $\varphi$ (`lat`) — latitude of the location, in degrees
 - $b$ — empirical regression coefficient, dimensionless (default 0.52)
 - $a$ — intercept, dimensionless (default `None`: $0{.}29 \cos\varphi$)
 
-### `Qg_hargreaves(Tmax, Tmin, Qo, k=0.16)`
-Hargreaves-Samani equation, without requiring sunshine data:
+### `solar_radiation_hargreaves(Tmax, Tmin, Ra, k=0.16)` · pt: `Qg_hargreaves`
+Hargreaves' radiation formula (FAO-56 eq. 50), without requiring sunshine
+data:
 
 ```math
-Q_g = k \sqrt{T_{max} - T_{min}} \cdot Q_o \quad [\text{MJ/m}^2]
+R_s = k_{Rs} \sqrt{T_{max} - T_{min}} \cdot R_a \quad [\text{MJ m}^{-2}\text{day}^{-1}]
 ```
 
 **Where:**
-- $Q_g$ (return) — global solar irradiance, in MJ/m²
+- $R_s$ (return) — solar radiation, in MJ m⁻² day⁻¹
 - $T_{max}$, $T_{min}$ (`Tmax`, `Tmin`) — daily maximum and minimum
   temperatures, in °C
-- $Q_o$ (`Qo`) — extraterrestrial solar irradiance, in MJ/m²
-- $k$ — empirical coefficient, dimensionless (0.16 — the function's default
-  — for inland regions, 0.19 for coastal regions)
+- $R_a$ (`Ra`) — extraterrestrial radiation, in MJ m⁻² day⁻¹
+- $k_{Rs}$ (`k`) — adjustment coefficient, dimensionless (0.16 — the
+  function's default — for inland regions, 0.19 for coastal regions)
 
 ---
 
+
 ## 3. Temperature
 
-Module `agrometeorologiapy.temperatura`.
+Module `agrometeorologiapy.en.temperature` (Portuguese API:
+`agrometeorologiapy.temperatura`).
 
-### `temp_media_extremos(Tmax, Tmin)`
+### `mean_temperature(Tmax, Tmin)` · pt: `temp_media_extremos`
+Mean daily air temperature (FAO-56 eq. 9):
 
 ```math
-T_{med} = \frac{T_{max} + T_{min}}{2}
+T_{mean} = \frac{T_{max} + T_{min}}{2}
 ```
 
 **Where:**
-- $T_{med}$ (return) — estimated daily mean temperature, in °C
+- $T_{mean}$ (return) — estimated daily mean temperature, in °C
 - $T_{max}$, $T_{min}$ (`Tmax`, `Tmin`) — daily maximum and minimum
   temperatures, in °C
 
-### `temp_media_estacao_automatica(temperaturas)`
+### `mean_temperature_observations(temperatures)` · pt: `temp_media_estacao_automatica`
 Simple arithmetic mean of $n$ observations over the period:
 
 ```math
-T_{med} = \frac{1}{n}\sum_{i=1}^{n} T_i
+T_{mean} = \frac{1}{n}\sum_{i=1}^{n} T_i
 ```
 
 **Where:**
-- $T_{med}$ (return) — mean temperature for the period, in °C
-- $T_i$ (`temperaturas`) — each temperature observation, in °C
+- $T_{mean}$ (return) — mean temperature for the period, in °C
+- $T_i$ (`temperatures`) — each temperature observation, in °C
 - $n$ — number of observations in the list
 
 ---
 
 ## 4. Air Humidity
 
-Module `agrometeorologiapy.umidade`.
+Module `agrometeorologiapy.en.humidity` (Portuguese API:
+`agrometeorologiapy.umidade`).
 
-### `es_tetens(T_ar)`
-Tetens equation — saturation vapor pressure:
+### `saturation_vapour_pressure(T)` · pt: `es_tetens`
+Tetens equation (FAO-56 eq. 11):
 
 ```math
 e_s = 0{.}6108 \cdot 10^{\frac{7{.}5 \, T}{237{.}3 + T}} \quad [\text{kPa}]
 ```
 
 **Where:**
-- $e_s$ (return) — saturation vapor pressure, in kPa
-- $T$ (`T_ar`) — air temperature, in °C
+- $e_s$ (return) — saturation vapour pressure, in kPa
+- $T$ (`T`) — air temperature, in °C
 
-### `ea_umidade(es, UR)`
-Actual (partial) vapor pressure:
+### `actual_vapour_pressure(es, RH)` · pt: `ea_umidade`
 
 ```math
-e_a = e_s \cdot \frac{UR}{100}
+e_a = e_s \cdot \frac{RH}{100}
 ```
 
 **Where:**
-- $e_a$ (return) — actual (partial) vapor pressure, in kPa
-- $e_s$ (`es`) — saturation vapor pressure, in kPa
-- $UR$ — relative humidity of the air, in % (e.g. 65)
+- $e_a$ (return) — actual vapour pressure, in kPa
+- $e_s$ (`es`) — saturation vapour pressure, in kPa
+- $RH$ (`RH`) — relative humidity, in % (e.g. 65)
 
-### `deficit_saturacao(es, ea)`
+### `vapour_pressure_deficit(es, ea)` · pt: `deficit_saturacao`
 
 ```math
 \Delta e = e_s - e_a
 ```
 
 **Where:**
-- $\Delta e$ (return) — vapor saturation deficit, in kPa
-- $e_s$ (`es`) — saturation vapor pressure, in kPa
-- $e_a$ (`ea`) — actual (partial) vapor pressure, in kPa
+- $\Delta e$ (return) — vapour pressure deficit, in kPa
+- $e_s$ (`es`) — saturation vapour pressure, in kPa
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
 
-### `patm_altitude(A)`
-Local atmospheric pressure as a function of altitude:
+### `atmospheric_pressure(z)` · pt: `patm_altitude`
+Atmospheric pressure as a function of elevation (FAO-56 eq. 7):
 
 ```math
-P_{atm} = 101{.}3 \cdot \left( \frac{293 - 0{.}0065 A}{293} \right)^{5{.}26} \quad [\text{kPa}]
+P_{atm} = 101{.}3 \cdot \left( \frac{293 - 0{.}0065 z}{293} \right)^{5{.}26} \quad [\text{kPa}]
 ```
 
 **Where:**
-- $P_{atm}$ (return) — local atmospheric pressure, in kPa
-- $A$ — altitude of the location, in meters
+- $P_{atm}$ (return) — atmospheric pressure, in kPa
+- $z$ (`z`) — elevation above sea level, in m
 
-### `umidade_absoluta(ea, T_ar_C)`
+### `absolute_humidity(ea, T)` · pt: `umidade_absoluta`
 
 ```math
-UA = \frac{2168 \cdot e_a}{T + 273{.}15} \quad [\text{g of H}_2\text{O / m}^3]
+AH = \frac{2168 \cdot e_a}{T + 273{.}15} \quad [\text{g of H}_2\text{O / m}^3]
 ```
 
 **Where:**
-- $UA$ (return) — absolute humidity of the air, in g of H₂O per m³ of air
-- $e_a$ (`ea`) — partial vapor pressure, in kPa
-- $T$ (`T_ar_C`) — air temperature, in °C (converted internally to Kelvin,
+- $AH$ (return) — absolute humidity, in g of H₂O per m³ of air
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
+- $T$ (`T`) — air temperature, in °C (converted internally to kelvin,
   $T + 273{.}15$)
 
-### `umidade_saturacao(es, T_ar_C)`
+### `saturation_humidity(es, T)` · pt: `umidade_saturacao`
 
 ```math
-US = \frac{2168 \cdot e_s}{T + 273{.}15} \quad [\text{g of H}_2\text{O / m}^3]
+SH = \frac{2168 \cdot e_s}{T + 273{.}15} \quad [\text{g of H}_2\text{O / m}^3]
 ```
 
 **Where:**
-- $US$ (return) — saturation humidity of the air, in g of H₂O per m³ of air
-- $e_s$ (`es`) — saturation vapor pressure, in kPa
-- $T$ (`T_ar_C`) — air temperature, in °C
+- $SH$ (return) — saturation humidity, in g of H₂O per m³ of air
+- $e_s$ (`es`) — saturation vapour pressure, in kPa
+- $T$ (`T`) — air temperature, in °C
 
-### `umidade_relativa(ea, es)`
+### `relative_humidity(ea, es)` · pt: `umidade_relativa`
+FAO-56 eq. 10:
 
 ```math
-UR = 100 \cdot \frac{e_a}{e_s} \quad [\%]
+RH = 100 \cdot \frac{e_a}{e_s} \quad [\%]
 ```
 
 **Where:**
-- $UR$ (return) — relative humidity of the air, in %
-- $e_a$ (`ea`) — actual (partial) vapor pressure, in kPa
-- $e_s$ (`es`) — saturation vapor pressure, in kPa
+- $RH$ (return) — relative humidity, in %
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
+- $e_s$ (`es`) — saturation vapour pressure, in kPa
 
-### `ponto_orvalho(ea)`
+### `dewpoint_temperature(ea)` · pt: `ponto_orvalho`
 Algebraic inversion of the Tetens equation:
 
 ```math
@@ -412,16 +423,17 @@ x = \log_{10}\left(\frac{e_a}{0{.}6108}\right)
 ```
 
 ```math
-T_o = \frac{237{.}3 \, x}{7{.}5 - x} \quad [°C]
+T_{dew} = \frac{237{.}3 \, x}{7{.}5 - x} \quad [°C]
 ```
 
 **Where:**
-- $T_o$ (return) — dew point temperature, in °C
-- $e_a$ (`ea`) — actual (partial) vapor pressure, in kPa
+- $T_{dew}$ (return) — dewpoint temperature, in °C
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
 - $x$ — auxiliary variable (logarithm of the ratio $e_a/0{.}6108$),
   dimensionless
 
-### `constante_psicrometrica(Patm)`
+### `psychrometric_constant(Patm)` · pt: `constante_psicrometrica`
+FAO-56 eq. 8:
 
 ```math
 \gamma = 0{.}665 \times 10^{-3} \cdot P_{atm} \quad [\text{kPa}/°C]
@@ -429,33 +441,38 @@ T_o = \frac{237{.}3 \, x}{7{.}5 - x} \quad [°C]
 
 **Where:**
 - $\gamma$ (return) — psychrometric constant, in kPa/°C
-- $P_{atm}$ (`Patm`) — local atmospheric pressure, in kPa
+- $P_{atm}$ (`Patm`) — atmospheric pressure, in kPa
 
 ---
 
 ## 5. Energy Balance
 
-Module `agrometeorologiapy.energia`.
+Module `agrometeorologiapy.en.energy` (Portuguese API:
+`agrometeorologiapy.energia`).
 
-### `boc_saldo(Qg, r=0.25)`
-Net shortwave radiation — incoming global radiation minus the reflected
-fraction (albedo `r`; 0.25 is the average for grass):
+> ℹ️ **Sign convention:** the package returns the net longwave radiation as
+> a negative value (net loss) and computes $R_n = R_{ns} + R_{nl}$. FAO-56
+> writes $R_{nl}$ as a positive outgoing flux and $R_n = R_{ns} - R_{nl}$;
+> the net radiation is the same.
+
+### `net_shortwave_radiation(Rs, albedo=0.25)` · pt: `boc_saldo`
+Incoming solar radiation minus the reflected fraction (FAO-56 eq. 38):
 
 ```math
-BOC = Q_g (1 - r)
+R_{ns} = R_s (1 - \alpha)
 ```
 
 **Where:**
-- $BOC$ (return) — net shortwave radiation, in the same unit as $Q_g$
-- $Q_g$ (`Qg`) — global solar irradiance incident on the surface, in
-  MJ/m² day (or W/m²)
-- $r$ — surface reflection coefficient (albedo), dimensionless (0–1;
-  default 0.25, typical for grass)
+- $R_{ns}$ (return) — net shortwave radiation, in the same unit as $R_s$
+- $R_s$ (`Rs`) — solar radiation incident on the surface, in
+  MJ m⁻² day⁻¹ (or W/m²)
+- $\alpha$ (`albedo`) — surface albedo, dimensionless (0–1; default 0.25,
+  typical for grass; 0.23 for the FAO-56 reference crop)
 
-### `bol_saldo(Tmax, Tmin, ea, Qg, Qg_cs)`
-Net longwave radiation, Stefan-Boltzmann equation corrected per FAO-56.
+### `net_longwave_radiation(Tmax, Tmin, ea, Rs, Rso)` · pt: `bol_saldo`
+Stefan-Boltzmann law corrected for humidity and cloudiness (FAO-56 eq. 39).
 `Tmax`/`Tmin` are received in °C (consistent with the rest of the package)
-and converted internally to Kelvin, because the Stefan-Boltzmann term
+and converted internally to kelvin, because the Stefan-Boltzmann term
 requires absolute temperature:
 
 ```math
@@ -463,43 +480,45 @@ T_{max,K} = T_{max} + 273{.}15, \qquad T_{min,K} = T_{min} + 273{.}15
 ```
 
 ```math
-BOL = -\left[ 4{.}903 \times 10^{-9} \cdot \frac{T_{max,K}^4 + T_{min,K}^4}{2} \right] \cdot \left[ 0{.}34 - 0{.}14\sqrt{e_a} \right] \cdot \left[ 1{.}35 \frac{Q_g}{Q_{g,cs}} - 0{.}35 \right]
+R_{nl} = -\left[ 4{.}903 \times 10^{-9} \cdot \frac{T_{max,K}^4 + T_{min,K}^4}{2} \right] \cdot \left[ 0{.}34 - 0{.}14\sqrt{e_a} \right] \cdot \left[ 1{.}35 \frac{R_s}{R_{so}} - 0{.}35 \right]
 ```
 
 **Where:**
-- $BOL$ (return) — net longwave radiation, in MJ/m² (negative: net energy
-  loss through terrestrial emission)
+- $R_{nl}$ (return) — net longwave radiation, in MJ m⁻² day⁻¹ (negative:
+  net energy loss through terrestrial emission)
 - $T_{max}$, $T_{min}$ (`Tmax`, `Tmin`) — daily maximum and minimum
-  temperatures, in °C; $T_{max,K}$, $T_{min,K}$ are the same in Kelvin
-- $e_a$ (`ea`) — actual (partial) vapor pressure, in kPa
-- $Q_g$ (`Qg`) — measured/estimated global solar radiation for the day, in
-  MJ/m²
-- $Q_{g,cs}$ (`Qg_cs`) — clear-sky solar radiation, in MJ/m²
+  temperatures, in °C; $T_{max,K}$, $T_{min,K}$ are the same in kelvin
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
+- $R_s$ (`Rs`) — measured/estimated solar radiation for the day, in
+  MJ m⁻² day⁻¹
+- $R_{so}$ (`Rso`) — clear-sky solar radiation, in MJ m⁻² day⁻¹
 - $4{.}903 \times 10^{-9}$ — Stefan-Boltzmann constant, in MJ K⁻⁴ m⁻² day⁻¹
 
 > 🐛 **Note:** the original source notebook applied this term directly to
-> Tmax/Tmin in °C (without converting to Kelvin), which underestimated BOL
+> Tmax/Tmin in °C (without converting to kelvin), which underestimated it
 > by several orders of magnitude. This was fixed in this library — see the
 > [CHANGELOG](../CHANGELOG.md).
 
-### `saldo_radiacao(BOC, BOL)`
+### `net_radiation(Rns, Rnl)` · pt: `saldo_radiacao`
+FAO-56 eq. 40, with the sign convention above:
 
 ```math
-R_n = BOC + BOL \quad [\text{MJ/m}^2\text{day}]
+R_n = R_{ns} + R_{nl} \quad [\text{MJ m}^{-2}\text{day}^{-1}]
 ```
 
 **Where:**
-- $R_n$ (return) — net radiation, in MJ/m² day (or W/m²)
-- $BOC$ — net shortwave radiation, same unit as $R_n$
-- $BOL$ — net longwave radiation, same unit as $R_n$
+- $R_n$ (return) — net radiation, in MJ m⁻² day⁻¹ (or W/m²)
+- $R_{ns}$ (`Rns`) — net shortwave radiation, same unit as $R_n$
+- $R_{nl}$ (`Rnl`) — net longwave radiation (negative), same unit as $R_n$
 
 ---
 
 ## 6. Evapotranspiration
 
-Module `agrometeorologiapy.evapotranspiracao`.
+Module `agrometeorologiapy.en.evapotranspiration` (Portuguese API:
+`agrometeorologiapy.evapotranspiracao`).
 
-### `thornthwaite_mensal(df, col_T='T_media_C', lat=None)`
+### `pet_thornthwaite(df, col_T='T_mean_C', lat=None)` · pt: `thornthwaite_mensal`
 Thornthwaite (1948) method, monthly. For each of the 12 months:
 
 ```math
@@ -515,17 +534,17 @@ a = 6{.}75 \times 10^{-7} I^3 - 7{.}71 \times 10^{-5} I^2 + 1{.}792 \times 10^{-
 ```
 
 ```math
-ETP_{nc} = 16 \left( \frac{10 T}{I} \right)^{a} \quad \text{(uncorrected, mm/month of 30 days and 12h of sunlight)}
+PET_{u} = 16 \left( \frac{10 T}{I} \right)^{a} \quad \text{(unadjusted, mm/month of 30 days and 12h of sunlight)}
 ```
 
 For $T \ge 26{.}5$ °C the original method uses a table instead of the equation above:
 
 ```math
-ETP_{nc} = -415{.}85 + 32{.}24\,T - 0{.}43\,T^2
+PET_{u} = -415{.}85 + 32{.}24\,T - 0{.}43\,T^2
 ```
 
-Corrected by the month's real photoperiod (via the solar declination for
-the month's mean Julian day) and by the actual number of days in the
+Adjusted by the month's daylight hours (via the solar declination for the
+month's mean day of the year) and by the actual number of days in the
 month:
 
 ```math
@@ -533,30 +552,30 @@ K = \frac{N}{12} \cdot \frac{\text{days}_{\text{month}}}{30}
 ```
 
 ```math
-ETP = ETP_{nc} \cdot K \quad [\text{mm/month}]
+PET = PET_{u} \cdot K \quad [\text{mm/month}]
 ```
 
 **Where:**
-- $ETP$ (return, column `ETP_mm_mes`) — corrected potential
+- $PET$ (return, column `PET_mm_month`) — adjusted potential
   evapotranspiration, in mm/month
 - $T$ (`col_T` column of `df`) — mean temperature for each month, in °C
 - $i$ — monthly heat index, dimensionless; $I$ — sum of the 12 monthly
   indices (annual heat index), dimensionless
 - $a$ — empirical exponent, a function of $I$, dimensionless
-- $ETP_{nc}$ — uncorrected potential evapotranspiration, in mm/month
-- $N$ — photoperiod for the month (computed internally from `lat` and the
-  solar declination for the month's mean Julian day), in hours
-- `dias_mes` — actual number of days in the month (28–31)
+- $PET_{u}$ — unadjusted potential evapotranspiration, in mm/month
+- $N$ — daylight hours for the month (computed internally from `lat` and
+  the solar declination for the month's mean day of the year), in hours
+- $\text{days}_{\text{month}}$ — actual number of days in the month (28–31)
 
-### `camargo_maluf_mensal(df, col_T='T_media_C', lat=None)`
+### `pet_camargo(df, col_T='T_mean_C', lat=None)` · pt: `camargo_maluf_mensal`
 Camargo (1971) method, with the F coefficient modified by Maluf (Camargo
-et al., 1999). Self-contained function: it recomputes monthly
-extraterrestrial radiation internally ($Q_o$, from the solar declination
-for the month's mean Julian day) and converts it to evaporation
+et al., 1999). Self-contained function: it recomputes the monthly
+extraterrestrial radiation internally ($R_a$, from the solar declination
+for the month's mean day of the year) and converts it to evaporation
 equivalent:
 
 ```math
-Q_{o,mm} = 0{.}408 \cdot Q_{o}
+R_{a,mm} = 0{.}408 \cdot R_{a}
 ```
 
 The F coefficient depends on the **annual** mean temperature
@@ -567,75 +586,77 @@ The F coefficient depends on the **annual** mean temperature
 - $F = 0{.}0110$ if $\bar{T}_{annual} \ge 24°C$
 
 ```math
-ETP = F \cdot Q_{o,mm} \cdot T \cdot \text{days}_{\text{month}} \quad [\text{mm/month}]
+PET = F \cdot R_{a,mm} \cdot T \cdot \text{days}_{\text{month}} \quad [\text{mm/month}]
 ```
 
 **Where:**
-- $ETP$ (return, column `ETP_mm_mes`) — monthly potential
+- $PET$ (return, column `PET_mm_month`) — monthly potential
   evapotranspiration, in mm/month
-- $Q_o$ (column `Qo_MJ_m2dia`) — monthly extraterrestrial radiation, in
-  MJ/m² day; $Q_{o,mm}$ (column `Qo_mm_dia`) — the same, in evaporation
+- $R_a$ (column `Ra_MJ_m2day`) — monthly extraterrestrial radiation, in
+  MJ m⁻² day⁻¹; $R_{a,mm}$ (column `Ra_mm_day`) — the same, in evaporation
   equivalent, mm/day
 - $F$ — empirical coefficient, dimensionless, chosen from the annual mean
   temperature
 - $\bar{T}_{annual}$ — annual mean temperature (mean of the 12 input
   monthly temperatures), in °C
 - $T$ (`col_T` column of `df`) — mean temperature for each month, in °C
-- `dias_mes` — actual number of days in the month (28–31)
+- $\text{days}_{\text{month}}$ — actual number of days in the month (28–31)
 
-### `etp_hargreaves_samani(Qo, Tmax, Tmin, Tmed)`
+### `pet_hargreaves_samani(Ra, Tmax, Tmin, Tmean)` · pt: `etp_hargreaves_samani`
+Hargreaves & Samani (1985) (FAO-56 eq. 52):
 
 ```math
-Q_{o,mm} = 0{.}408 \cdot Q_o
+R_{a,mm} = 0{.}408 \cdot R_a
 ```
 
 ```math
-ETP = 0{.}0023 \cdot Q_{o,mm} \cdot \sqrt{T_{max} - T_{min}} \cdot (T_{med} + 17{.}8) \quad [\text{mm/day}]
+PET = 0{.}0023 \cdot R_{a,mm} \cdot \sqrt{T_{max} - T_{min}} \cdot (T_{mean} + 17{.}8) \quad [\text{mm/day}]
 ```
 
 **Where:**
-- $ETP$ (return) — potential evapotranspiration, in mm/day
-- $Q_o$ (`Qo`) — extraterrestrial solar irradiance, in MJ/m² day;
-  $Q_{o,mm}$ — the same, in evaporation equivalent, mm/day
-- $T_{max}$, $T_{min}$, $T_{med}$ (`Tmax`, `Tmin`, `Tmed`) — maximum,
+- $PET$ (return) — potential evapotranspiration, in mm/day
+- $R_a$ (`Ra`) — extraterrestrial radiation, in MJ m⁻² day⁻¹; $R_{a,mm}$ —
+  the same, in evaporation equivalent, mm/day
+- $T_{max}$, $T_{min}$, $T_{mean}$ (`Tmax`, `Tmin`, `Tmean`) — maximum,
   minimum and mean air temperatures, in °C
 
-### `declive_pressao_vapor(T_ar)`
-Derivative of the Tetens equation with respect to temperature:
+### `slope_vapour_pressure_curve(T)` · pt: `declive_pressao_vapor`
+Derivative of the Tetens equation with respect to temperature (FAO-56
+eq. 13):
 
 ```math
 \Delta = \frac{4098 \cdot e_s(T)}{(T + 237{.}3)^2} \quad [\text{kPa}/°C]
 ```
 
 **Where:**
-- $\Delta$ (return) — slope of the saturation vapor pressure curve, in
+- $\Delta$ (return) — slope of the saturation vapour pressure curve, in
   kPa/°C
-- $T$ (`T_ar`) — air temperature, in °C (typically the daily mean
+- $T$ (`T`) — air temperature, in °C (typically the daily mean
   temperature)
-- $e_s(T)$ — saturation vapor pressure at temperature $T$ (`es_tetens`), in
-  kPa
+- $e_s(T)$ — saturation vapour pressure at temperature $T$
+  (`saturation_vapour_pressure`), in kPa
 
-### `etp_priestley_taylor(Rn, G, Delta, gamma, alfa=1.26)`
+### `pet_priestley_taylor(Rn, G, Delta, gamma, alpha=1.26)` · pt: `etp_priestley_taylor`
 
 ```math
-ETP = \alpha \cdot \frac{\Delta}{\Delta + \gamma} \cdot \frac{R_n - G}{\lambda} \quad [\text{mm/day}]
+PET = \alpha \cdot \frac{\Delta}{\Delta + \gamma} \cdot \frac{R_n - G}{\lambda} \quad [\text{mm/day}]
 ```
 
 **Where:**
-- $ETP$ (return) — potential evapotranspiration, in mm/day
-- $R_n$ (`Rn`) — net radiation, in MJ/m² day
-- $G$ — soil heat flux, in MJ/m² day (usually $G = 0$ on a daily scale)
-- $\Delta$ (`Delta`) — slope of the saturation vapor pressure curve, in
+- $PET$ (return) — potential evapotranspiration, in mm/day
+- $R_n$ (`Rn`) — net radiation, in MJ m⁻² day⁻¹
+- $G$ — soil heat flux, in MJ m⁻² day⁻¹ (usually $G = 0$ on a daily scale)
+- $\Delta$ (`Delta`) — slope of the saturation vapour pressure curve, in
   kPa/°C
 - $\gamma$ (`gamma`) — psychrometric constant, in kPa/°C
 - $\lambda = 2{.}45$ — latent heat of vaporization, in MJ/kg (fixed constant
   in the code)
-- $\alpha$ (`alfa`) — Priestley-Taylor coefficient, dimensionless (default
+- $\alpha$ (`alpha`) — Priestley-Taylor coefficient, dimensionless (default
   1.26)
 
-### `vento_2m(uz, z)`
+### `wind_speed_2m(uz, z)` · pt: `vento_2m`
 Converts wind speed measured at any height to 2 m, using the logarithmic
-wind profile (FAO-56, eq. 47):
+wind profile (FAO-56 eq. 47):
 
 ```math
 u_2 = u_z \cdot \frac{4{.}87}{\ln(67{.}8 \, z - 5{.}42)} \quad [\text{m/s}]
@@ -646,203 +667,206 @@ u_2 = u_z \cdot \frac{4{.}87}{\ln(67{.}8 \, z - 5{.}42)} \quad [\text{m/s}]
 - $u_z$ (`uz`) — wind speed measured at height $z$, in m/s
 - $z$ (`z`) — measurement height above the ground, in m
 
-### `eto_penman_monteith_fao56(Rn, G, Tmed, u2, es, ea, Delta, gamma)`
-Penman-Monteith equation as standardized by the FAO-56 bulletin (Allen et
-al., 1998), referenced to a hypothetical reference crop (grass, 0.12 m,
-albedo 0.23):
+### `eto_penman_monteith(Rn, G, Tmean, u2, es, ea, Delta, gamma)` · pt: `eto_penman_monteith_fao56`
+FAO Penman-Monteith equation (FAO-56 eq. 6; Allen et al., 1998), for the
+hypothetical reference crop (grass, 0.12 m, albedo 0.23):
 
 ```math
-ETo = \frac{0{.}408 \, \Delta (R_n - G) + \gamma \cdot \frac{900}{T_{med}+273} \cdot u_2 \cdot (e_s - e_a)}{\Delta + \gamma (1 + 0{.}34 \, u_2)} \quad [\text{mm/day}]
+ET_o = \frac{0{.}408 \, \Delta (R_n - G) + \gamma \cdot \frac{900}{T_{mean}+273} \cdot u_2 \cdot (e_s - e_a)}{\Delta + \gamma (1 + 0{.}34 \, u_2)} \quad [\text{mm/day}]
 ```
 
 **Where:**
-- $ETo$ (return) — reference evapotranspiration, in mm/day
-- $R_n$ (`Rn`) — net radiation, in MJ/m² day
-- $G$ — soil heat flux, in MJ/m² day ($G = 0$ on a daily scale)
-- $T_{med}$ (`Tmed`) — daily mean air temperature, in °C
+- $ET_o$ (return) — reference evapotranspiration, in mm/day
+- $R_n$ (`Rn`) — net radiation, in MJ m⁻² day⁻¹
+- $G$ — soil heat flux, in MJ m⁻² day⁻¹ ($G = 0$ on a daily scale)
+- $T_{mean}$ (`Tmean`) — daily mean air temperature, in °C
 - $u_2$ (`u2`) — wind speed at 2 m height, in m/s
-- $e_s$ (`es`) — saturation vapor pressure, in kPa
-- $e_a$ (`ea`) — actual (partial) vapor pressure, in kPa
-- $\Delta$ (`Delta`) — slope of the saturation vapor pressure curve, in
+- $e_s$ (`es`) — saturation vapour pressure, in kPa
+- $e_a$ (`ea`) — actual vapour pressure, in kPa
+- $\Delta$ (`Delta`) — slope of the saturation vapour pressure curve, in
   kPa/°C
 - $\gamma$ (`gamma`) — psychrometric constant, in kPa/°C
 
 ---
 
-## 7. Growing Degree-Days
+## 7. Growing Degree Days
 
-Module `agrometeorologiapy.grau_dias`.
+Module `agrometeorologiapy.en.degree_days` (Portuguese API:
+`agrometeorologiapy.grau_dias`).
 
-### Daily growing-degree-day rule (GDi)
-Used by both `data_maturacao_fisiologica` and `data_semeadura`:
+### Daily growing degree days (GDD)
+Used by both `maturity_date` and `sowing_date`:
 
-- $GD_i = T_{med} - T_b$, if $T_b < T_{min}$
-- $GD_i = \dfrac{(T_{max} - T_b)^2}{2(T_{max} - T_{min})}$, if $T_b \ge T_{min}$
+- $GDD = T_{mean} - T_b$, if $T_b < T_{min}$
+- $GDD = \dfrac{(T_{max} - T_b)^2}{2(T_{max} - T_{min})}$, if $T_b \ge T_{min}$
 
 **Where:**
-- $GD_i$ — growing degree-days for the period (day, dekad or month), in
-  °C·day
-- $T_{med}$, $T_{max}$, $T_{min}$ — mean, maximum and minimum temperatures
+- $GDD$ — daily growing degree days for the period (day, dekad or month),
+  in °C·day
+- $T_{mean}$, $T_{max}$, $T_{min}$ — mean, maximum and minimum temperatures
   for the period, in °C
 - $T_b$ — crop base temperature (below which there is no development), in
   °C
 
-### `data_maturacao_fisiologica(df, Tb, CT, dia_semeadura, mes_semeadura, intervalo='d', ano=2023)`
-Starting from the sowing date, accumulates $GD_i \times n_{period}$
-period by period (daily, dekadal or monthly) until the accumulated sum
-reaches the cycle's thermal constant:
+### `maturity_date(df, Tb, TT, sowing_day, sowing_month, interval='d', year=2023, verbose=True)` · pt: `data_maturacao_fisiologica`
+Starting from the sowing date, accumulates $GDD \times n_{period}$ period
+by period (daily, dekadal or monthly) until the sum reaches the thermal
+time requirement of the cycle:
 
 ```math
-\sum GD_i \cdot n_{period} \ge CT
+\sum GDD \cdot n_{period} \ge TT
 ```
 
 Returns the date on which that happens — physiological maturity. In the
-last period only the days needed to complete `CT` are counted
-($\lceil (CT - GDA_{previous}) / GD_i \rceil$), so the last row of the
+last period only the days needed to complete `TT` are counted
+($\lceil (TT - GDD_{previous}) / GDD \rceil$), so the last row of the
 DataFrame is the maturity date itself. The year rolls over when the cycle
-crosses December → January.
-The result has one row per period with the columns `Meses` (abbreviated
-month), `data`, `Tmed`, `GDi` (daily degree-days), `GDA_mes` ($GD_i \times$
-days counted in the period) and `GDA_ciclo` (cycle accumulation).
+crosses December → January. The result has one row per period with the
+columns `month` (abbreviated), `date`, `Tmean`, `GDD` (daily degree days),
+`GDD_period` ($GDD \times$ days counted in the period) and `GDD_cycle`
+(cycle accumulation). With `verbose=True` (default), the sowing and
+maturity dates are printed.
 
 **Where:**
-- `df` — climate series (columns `dia`, `mes`, `Tmed`, `Tmax`, `Tmin`), in
-  chronological order
+- `df` — climate series (columns `day`, `month`, `Tmean`, `Tmax`, `Tmin`),
+  in chronological order
 - `Tb` — crop base temperature, in °C
-- `CT` — total thermal constant for the cycle, in °C·day
-- `dia_semeadura`, `mes_semeadura` — sowing date, integers
-- `intervalo` — `'d'` (daily), `'dec'` (dekadal, 10 days) or `'M'` (monthly)
+- `TT` — thermal time requirement of the cycle, in °C·day
+- `sowing_day`, `sowing_month` — sowing date, integers
+- `interval` — `'d'` (daily), `'dekad'` (dekadal, 10 days) or `'M'`
+  (monthly)
 - $n_{period}$ — number of days in the period (1 for daily, 10 for
   dekadal, days in the month for monthly)
-- `ano` — reference year, integer (default 2023, non-leap)
+- `year` — reference year, integer (default 2023, non-leap)
 
-### `data_semeadura(df, Tb, CT, dia_maturacao, mes_maturacao, intervalo='d', ano=2023)`
-The same growing-degree-day accumulation, but walking the calendar
+### `sowing_date(df, Tb, TT, maturity_day, maturity_month, interval='d', year=2023, verbose=True)` · pt: `data_semeadura`
+The same growing degree day accumulation, but walking the calendar
 **backwards** from a known maturity date (e.g. a target harvest date),
-until `CT` is accumulated — returning the required sowing date.
+until `TT` is accumulated — returning the required sowing date.
 
-**Where:** same parameters as `data_maturacao_fisiologica`, swapping
-`dia_semeadura`/`mes_semeadura` (known starting date) for
-`dia_maturacao`/`mes_maturacao` (reference date from which the calendar is
+**Where:** same parameters as `maturity_date`, swapping
+`sowing_day`/`sowing_month` (known starting date) for
+`maturity_day`/`maturity_month` (reference date from which the calendar is
 walked backwards).
 
 ---
 
 ## 8. Water Balance
 
-Module `agrometeorologiapy.balanco_hidrico`. Both functions implement the
+Module `agrometeorologiapy.en.water_balance` (Portuguese API:
+`agrometeorologiapy.balanco_hidrico`). The functions implement the
 sequential accounting method of Thornthwaite & Mather (1955).
 
-### `balanco_hidrico_climatologico(df, CAD=100.0, ciclico=True)`
+### `climatic_water_balance(df, AWC=100.0, cyclic=True)` · pt: `balanco_hidrico_climatologico`
 For each period (month) $i$:
 
 ```math
-P - ETP
+P - PET
 ```
 
-- If $P - ETP < 0$ (deficit): accumulate the negative value and recompute
-  soil water storage through the exponential model —
+- If $P - PET < 0$ (deficit): accumulate the potential water loss and
+  recompute soil water storage through the exponential model —
 
-  $`\displaystyle \text{NEG.ACUM}_i = \text{NEG.ACUM}_{i-1} + (P - ETP)`$
+  $`\displaystyle APWL_i = APWL_{i-1} + (P - PET)`$
 
-  $`\displaystyle ARM_i = CAD \cdot e^{\,\text{NEG.ACUM}_i / CAD}`$
+  $`\displaystyle STO_i = AWC \cdot e^{\,APWL_i / AWC}`$
 
-- If $P - ETP \ge 0$ (replenishment): the soil receives water up to a
-  maximum of `CAD` —
+- If $P - PET \ge 0$ (recharge): the soil receives water up to a maximum
+  of `AWC` —
 
-  $`\displaystyle ARM_i = \min(ARM_{i-1} + (P - ETP),\; CAD)`$
+  $`\displaystyle STO_i = \min(STO_{i-1} + (P - PET),\; AWC)`$
 
-  and, if $ARM_i < CAD$, NEG.ACUM is recomputed by inversion:
+  and, if $STO_i < AWC$, APWL is recomputed by inversion:
 
-  $`\displaystyle \text{NEG.ACUM}_i = CAD \cdot \ln(ARM_i / CAD)`$
+  $`\displaystyle APWL_i = AWC \cdot \ln(STO_i / AWC)`$
 
 From soil water storage, the following are derived:
 
 ```math
-ALT_i = ARM_i - ARM_{i-1}
+\Delta STO_i = STO_i - STO_{i-1}
 ```
 
-- $ETR_i = P_i + |ALT_i|$, if $P_i - ETP_i < 0$
-- $ETR_i = ETP_i$, otherwise
+- $ETa_i = P_i + |\Delta STO_i|$, if $P_i - PET_i < 0$
+- $ETa_i = PET_i$, otherwise
 
 ```math
-DEF_i = ETP_i - ETR_i
+DEF_i = PET_i - ETa_i
 ```
 
-- $EXC_i = (P_i - ETP_i) - ALT_i$, if $P_i - ETP_i > 0$ and $ARM_i = CAD$
-- $EXC_i = 0$, otherwise
+- $SUR_i = (P_i - PET_i) - \Delta STO_i$, if $P_i - PET_i > 0$ and $STO_i = AWC$
+- $SUR_i = 0$, otherwise
 
 **Where:**
-- `df` — columns `Meses` (months), `P (mm/mês)` (precipitation) and
-  `ETP (mm/mês)` (potential evapotranspiration)
-- `CAD` — soil water holding capacity, in mm (default 100.0)
-- $P_i$, $ETP_i$ — precipitation and potential evapotranspiration for
+- `df` — columns `P (mm/month)` (precipitation) and `PET (mm/month)`
+  (potential evapotranspiration); a `month` column, if present, is kept
+- `AWC` — available water capacity of the soil, in mm (default 100.0)
+- $P_i$, $PET_i$ — precipitation and potential evapotranspiration for
   period $i$, in mm/month
-- $ARM_i$ (column `ARM (mm/mês)`) — soil water storage at the end of
-  period $i$, in mm; $i-1$ is the previous period. With `ciclico=True`
+- $STO_i$ (column `STO (mm/month)`) — soil water storage at the end of
+  period $i$, in mm; $i-1$ is the previous period. With `cyclic=True`
   (default), the storage before January is December's storage at the
-  annual-cycle equilibrium (the 12 months are repeated until December's ARM
-  converges); with `ciclico=False`, it starts from $ARM = CAD$ (full soil)
-- $\text{NEG.ACUM}_i$ (column `NEG.ACUM (mm)`) — accumulated negative
-  $P-ETP$, an auxiliary variable in mm, used in the exponential drying
-  model
-- $ALT_i$ (column `ALT (mm/mês)`) — change in storage between periods, in
-  mm
-- $ETR_i$ (column `ETR (mm/mês)`) — actual evapotranspiration, in mm/month
-- $DEF_i$ (column `DEF (mm/mês)`) — water deficiency, in mm/month
-- $EXC_i$ (column `EXC (mm/mês)`) — water surplus, in mm/month
+  annual-cycle equilibrium (the 12 months are repeated until December's STO
+  converges); with `cyclic=False`, it starts from $STO = AWC$ (full soil)
+- $APWL_i$ (column `APWL (mm)`) — accumulated potential water loss, an
+  auxiliary variable in mm, used in the exponential drying model
+- $\Delta STO_i$ (column `dSTO (mm/month)`) — change in storage between
+  periods, in mm
+- $ETa_i$ (column `ETa (mm/month)`) — actual evapotranspiration, in mm/month
+- $DEF_i$ (column `DEF (mm/month)`) — water deficit, in mm/month
+- $SUR_i$ (column `SUR (mm/month)`) — water surplus, in mm/month
 
-### `balanco_hidrico_climatologico_grade(P, ETP, CAD=100.0, ciclico=True, tol=0.01, max_iter=100)`
-Same equations as `balanco_hidrico_climatologico`, vectorized with numpy
-for many locations at once (e.g. every pixel of a raster with the monthly
-climate normal).
+### `climatic_water_balance_grid(P, PET, AWC=100.0, cyclic=True, tol=0.01, max_iter=100)` · pt: `balanco_hidrico_climatologico_grade`
+Same equations as `climatic_water_balance`, vectorized with numpy for many
+locations at once (e.g. every pixel of a raster with the monthly climate
+normal).
 
 **Where:**
-- `P`, `ETP` — arrays of shape `(12, ...)`, in mm/month, January to
+- `P`, `PET` — arrays of shape `(12, ...)`, in mm/month, January to
   December along the first axis
-- `CAD` — scalar or array with the shape of the spatial dimensions, in mm
+- `AWC` — scalar or array with the shape of the spatial dimensions, in mm
   (> 0; use NaN for locations without data)
-- `ciclico` — equilibrium initial storage of the annual cycle (default) or
+- `cyclic` — equilibrium initial storage of the annual cycle (default) or
   full soil before January
 - `tol`, `max_iter` — tolerance (mm) and maximum number of annual cycles
   in the search for equilibrium
-- return — `dict` of `(12, ...)` arrays: `P-ETP`, `ARM`, `NEG.ACUM`,
-  `ALT`, `ETR`, `DEF`, `EXC`
+- return — `dict` of `(12, ...)` arrays: `P-PET`, `STO`, `APWL`, `dSTO`,
+  `ETa`, `DEF`, `SUR`
 
-### `balanco_hidrico_cultura(df)`
-The same method, applied to a specific crop with `Chuva` (rainfall),
-`ETc` and `CAD` pre-computed by the user for each period (same formulas
-for `ARM`, `ALT`, `ETR`, `DEF` and `EXC` as the function above, swapping
-$P \to$ `Chuva` and $ETP \to$ `ETc`), plus the Water Requirement
-Satisfaction Index:
+### `crop_water_balance(df)` · pt: `balanco_hidrico_cultura`
+The same method, applied to a specific crop with `P`, `ETc` and `AWC`
+pre-computed by the user for each period (same formulas for `STO`, `dSTO`,
+`ETa`, `DEF` and `SUR` as above, with $PET \to$ `ETc`), plus the water
+requirement satisfaction index (Frère & Popov, 1979):
 
 ```math
-ISNA = \frac{ETR}{ETc}
+WRSI = \frac{ETa}{ETc}
 ```
 
 **Where:**
-- `df` — columns `Chuva` (rainfall, mm/period), `ETc` (crop
-  evapotranspiration, mm/period) and `CAD` (available water capacity for
+- `df` — columns `P` (precipitation, mm/period), `ETc` (crop
+  evapotranspiration, mm/period) and `AWC` (available water capacity for
   the period, mm), in chronological order
 - `ETc` — crop evapotranspiration, mm/period; pre-computed by the user as
-  $K_c \times ETo$ (crop coefficient × reference evapotranspiration),
+  $K_c \times ET_o$ (crop coefficient × reference evapotranspiration),
   already accounting for the phenological stage
-- `CAD` — available water capacity for the period, mm; pre-computed by the
-  user as $z \times DTA$ (root depth × total available water), already
-  accounting for root depth advancement
-- $ISNA$ (return, column `ISNA`) — Water Requirement Satisfaction Index
-  (*Índice de Satisfação das Necessidades de Água*), dimensionless (0–1:
-  the closer to 1, the lower the crop's water stress)
+- `AWC` — available water capacity for the period, mm; pre-computed by the
+  user as root depth × available water of the soil, already accounting for
+  root growth
+- $WRSI$ (return, column `WRSI`) — water requirement satisfaction index,
+  dimensionless (0–1: the closer to 1, the lower the crop's water stress)
 
 ---
 
 ## 9. Climate Classification
 
-Module `agrometeorologiapy.classificacao_climatica`. Each method has two
+Module `agrometeorologiapy.en.climate_classification` (Portuguese API:
+`agrometeorologiapy.classificacao_climatica`). Each method has two
 versions: one for **a single site** (lists of 12 months, Jan–Dec) and a
-`_grade` one for **many sites** (e.g. every pixel of a raster), with the
-12 months on the first axis, shape `(12, ...)`. Sites with NaN in any month
-get code 0 and class `''`.
+`_grid` one for **many sites** (e.g. every pixel of a raster), with the 12
+months on the first axis, shape `(12, ...)`. Sites with NaN in any month get
+code 0 and class `''`. The class codes (`Cfa`, `B1rA'a'`, `ST-UMi`...) are
+the same in both APIs; names and descriptions are in English here and in
+Portuguese in the Portuguese API.
 
 **Seasons** (Thornthwaite and Camargo): astronomical, weighted by the
 fraction of each month in the season (southern hemisphere; in the north,
@@ -858,7 +882,7 @@ summer ↔ winter and autumn ↔ spring):
 > Table 1 of Aparecido et al. (2016) has ⅓ Jun in autumn and ⅔ Jun in
 > winter; here June follows the astronomical calendar (winter starts on 21 June).
 
-### `classificacao_koppen(T, P, lat)` · `classificacao_koppen_grade(T, P, lat)`
+### `koppen_classification(T, P, lat)` · `koppen_classification_grid(T, P, lat)` · pt: `classificacao_koppen`
 Köppen-Geiger following Alvares et al. (2013), with the f/s/w seasonality of
 groups C and D from Kottek et al. (2006). Variables: $T_{ann}$ (annual mean),
 $T_{cold}$ and $T_{hot}$ (coldest and warmest month), $P_{ann}$ and $P_{dry}$
@@ -881,39 +905,39 @@ $T_{cold}$ and $T_{hot}$ (coldest and warmest month), $P_{ann}$ and $P_{dry}$
 - `T` — monthly mean temperature, in °C
 - `P` — monthly precipitation, in mm/month
 - `lat` — latitude, in degrees (negative in the southern hemisphere)
-- return — `id` (1–31) and `classe` (e.g. `'Cfa'`)
+- return — `id` (1–31) and `class` (e.g. `'Cfa'`)
 
-### `classificacao_thornthwaite(P, ETP, lat, CAD=100)` · `classificacao_thornthwaite_grade(...)`
-Thornthwaite (1948), from the climatological water balance
-(`balanco_hidrico_climatologico_grade`):
+### `thornthwaite_classification(P, PET, lat, AWC=100)` · `thornthwaite_classification_grid(...)` · pt: `classificacao_thornthwaite`
+Thornthwaite (1948), from the climatic water balance
+(`climatic_water_balance_grid`):
 
 ```math
-I_h = 100\,\frac{EXC}{ETP} \qquad I_a = 100\,\frac{DEF}{ETP} \qquad I_m = I_h - 0{.}6\,I_a
+I_h = 100\,\frac{SUR}{PET} \qquad I_a = 100\,\frac{DEF}{PET} \qquad I_m = I_h - 0{.}6\,I_a
 ```
 
 ```math
-ETP_{summer}\,(\%) = 100\,\frac{ETP_{summer}}{ETP_{annual}}
+PET_{summer}\,(\%) = 100\,\frac{PET_{summer}}{PET_{annual}}
 ```
 
-Class = moisture ($I_m$) + subtype + thermal efficiency ($ETP_{annual}$) +
-summer concentration ($ETP_{summer}$, %), e.g. `B1rA'a'`.
+Class = moisture ($I_m$) + subtype + thermal efficiency ($PET_{annual}$) +
+summer concentration ($PET_{summer}$, %), e.g. `B1rA'a'`.
 
-| $I_m$ | Moisture | | $ETP_{annual}$ (mm) | Thermal |
+| $I_m$ | Moisture | | $PET_{annual}$ (mm) | Thermal |
 |---|---|---|---|---|
 | ≥ 100 | A (perhumid) | | ≥ 1140 | A' (megathermal) |
 | 80–100 / 60–80 / 40–60 / 20–40 | B4 / B3 / B2 / B1 (humid) | | 997–1140 / 855–997 / 712–855 / 570–712 | B'4 / B'3 / B'2 / B'1 (mesothermal) |
 | 0–20 | C2 (moist subhumid) | | 427–570 / 285–427 | C'2 / C'1 (microthermal) |
 | −20–0 | C1 (dry subhumid) | | 142–285 | D' (tundra) |
-| −40– −20 | D (semiarid) | | < 142 | E' (perpetual frost) |
+| −40– −20 | D (semiarid) | | < 142 | E' (frost) |
 | < −40 | E (arid) | | | |
 
 - **Subtype, humid climates** ($I_m \ge 0$), by deficit: r ($I_a < 16{.}7$);
   s/w ($16{.}7 \le I_a < 33{.}3$); s2/w2 ($I_a \ge 33{.}3$) — s if the summer
   DEF exceeds the winter DEF, otherwise w
 - **Subtype, dry climates** ($I_m < 0$), by surplus: d ($I_h < 10$); s/w
-  ($10 \le I_h < 20$); s2/w2 ($I_h \ge 20$) — w if the summer EXC exceeds the
-  winter EXC, otherwise s
-- **Summer concentration** ($ETP_{summer}$, %): a' < 48; b'4 < 51.9;
+  ($10 \le I_h < 20$); s2/w2 ($I_h \ge 20$) — w if the summer SUR exceeds the
+  winter SUR, otherwise s
+- **Summer concentration** ($PET_{summer}$, %): a' < 48; b'4 < 51.9;
   b'3 < 56.3; b'2 < 61.6; b'1 < 68; c'2 < 76.3; c'1 < 88; d' ≥ 88
 
 > Tables from Aparecido et al. (2016), corrected against the original
@@ -922,22 +946,23 @@ summer concentration ($ETP_{summer}$, %), e.g. `B1rA'a'`.
 > climates with larger summer surplus = w (paper: s).
 
 **Where:**
-- `P`, `ETP` — monthly precipitation and potential evapotranspiration, in mm/month
+- `P`, `PET` — monthly precipitation and potential evapotranspiration, in mm/month
 - `lat` — latitude, in degrees (sets summer and winter)
-- `CAD` — soil available water capacity, in mm (default 100)
-- return — `classe`, codes (`umidade`, `subtipo`, `termica`,
-  `concentracao`), `Ih`, `Ia`, `Im`, `ETP_anual`, `DEF_anual`, `EXC_anual`,
-  `ETP_verao_pct` (plus `descricao` in the single-site version)
+- `AWC` — available water capacity of the soil, in mm (default 100)
+- return — `class`, codes (`moisture`, `subtype`, `thermal`,
+  `concentration`), `Ih`, `Ia`, `Im`, `PET_annual`, `DEF_annual`,
+  `SUR_annual`, `PET_summer_pct` (plus `description` in the single-site
+  version, e.g. `'Humid, mesothermal'`)
 
-### `classificacao_camargo(T, P, ETP, lat, CAD=100, tabela_termica='coerente')` · `classificacao_camargo_grade(...)`
+### `camargo_classification(T, P, PET, lat, AWC=100, thermal_table='consistent')` · `camargo_classification_grid(...)` · pt: `classificacao_camargo`
 Camargo (1991) as modified by Maluf (2000), Tables 6–8 of Aparecido et al.
-(2016). Class = thermal + `-` + water + dry-season letter, e.g. `ST-UMi`.
+(2016). Class = thermal + `-` + moisture + dry-season letter, e.g. `ST-UMi`.
 
 | $T_{ann}$ (°C) | $T_{cold}$ (°C) | Thermal |
 |---|---|---|
 | ≤ 3 | | GL (glacial) |
-| 3–7 | | FR (frigid) |
-| 7–12 | | CO (cold) |
+| 3–7 | | FR (cold) |
+| 7–12 | | CO (moderately cold) |
 | 12–18 | | TE (temperate) |
 | 18–22 | ≤ 13 | STE (subtemperate) |
 | 18–22 | 13–20 | ST (subtropical) |
@@ -945,7 +970,7 @@ Camargo (1991) as modified by Maluf (2000), Tables 6–8 of Aparecido et al.
 | 22–25 | | TR (tropical) |
 | > 25 | | EQ (equatorial) |
 
-| Annual DEF (mm) | Annual EXC (mm) | Water |
+| Annual DEF (mm) | Annual SUR (mm) | Moisture |
 |---|---|---|
 | > 800 | 0 | DE (desert) |
 | 150–800 | 0 | AR (arid) |
@@ -953,34 +978,36 @@ Camargo (1991) as modified by Maluf (2000), Tables 6–8 of Aparecido et al.
 | > 150 | > 200 | MO (monsoonal) |
 | 0–150 | 0–200 | SB (subhumid) |
 | 0–150 (> 0) | > 200 | UM (humid) |
-| 0 | 200–1000 | PU (very humid) |
+| 0 | 200–1000 | PU (perhumid) |
 | 0 | > 1000 | SU (extremely humid) |
 
 For classes SE, MO, SB and UM, the letter of the season with the largest
-deficit is appended: v (summer), o (autumn), i (winter) or p (spring).
+deficit is appended — Portuguese initials: v (*verão*, summer), o (*outono*,
+autumn), i (*inverno*, winter) or p (*primavera*, spring). The codes are
+those of the original system.
 
 > **Reading Table 6.** The paper has "22 < $T_{ann}$ ≤ 25 **or**
 > $T_{cold}$ > 20 → TR", which, read literally, rules out EQ wherever the
 > coldest month exceeds 20 °C (nearly the whole equatorial region). The
-> default `tabela_termica='coerente'` uses $T_{cold}$ only to split the
+> default `thermal_table='consistent'` uses $T_{cold}$ only to split the
 > 18–22 °C range (table above); `'literal'` applies the rule $T_{cold} > 20 \rightarrow TR$ in
 > every case, as in the `climas_brasil` repository script.
 >
 > **Cases outside Table 7.** The paper does not cover 0 < DEF ≤ 150 mm with
-> EXC = 0, nor DEF = 0 with EXC ≤ 200 mm; here they fall into SB. DEF and EXC
+> SUR = 0, nor DEF = 0 with SUR ≤ 200 mm; here they fall into SB. DEF and SUR
 > below 0.05 mm count as zero.
 
 **Where:**
 - `T` — monthly mean temperature, in °C
-- `P`, `ETP` — monthly precipitation and potential evapotranspiration, in mm/month
+- `P`, `PET` — monthly precipitation and potential evapotranspiration, in mm/month
 - `lat` — latitude, in degrees
-- `CAD` — soil available water capacity, in mm (default 100)
-- `tabela_termica` — `'coerente'` (default) or `'literal'`
-- return — `classe`, codes (`termica`, `hidrica`, `estacao_seca`),
-  `T_anual`, `T_mes_frio`, `DEF_anual`, `EXC_anual` (plus `descricao` in the
-  single-site version)
+- `AWC` — available water capacity of the soil, in mm (default 100)
+- `thermal_table` — `'consistent'` (default) or `'literal'`
+- return — `class`, codes (`thermal`, `moisture`, `dry_season`),
+  `T_annual`, `T_coldest`, `DEF_annual`, `SUR_annual` (plus `description` in
+  the single-site version, e.g. `'Subtropical perhumid'`)
 
-### `classificacao_holdridge(T, P, lat, ETP=None, limiar_correcao=24)` · `classificacao_holdridge_grade(...)`
+### `holdridge_classification(T, P, lat, PET=None, correction_threshold=24)` · `holdridge_classification_grid(...)` · pt: `classificacao_holdridge`
 Holdridge life zones (38 zones; numbering and names from Jungkunst et al.,
 2021, based on Leemans, 1990). Biotemperature:
 
@@ -989,7 +1016,7 @@ t^*_m = t_m - \frac{3\,|\phi|}{100}\,(t_m - 24)^2 \;\;(\text{if } t_m > 24\ °C)
 ```
 
 ```math
-ETP_{annual} = 58{.}93 \cdot BT \qquad R = \frac{ETP_{annual}}{P_{annual}}
+PET_{annual} = 58{.}93 \cdot BT \qquad R = \frac{PET_{annual}}{P_{annual}}
 ```
 
 The zone comes from combining the biotemperature belt (polar < 1.5;
@@ -1001,12 +1028,12 @@ $R$ that double at each class (0.125; 0.25; 0.5; 1; 2; 4; 8; 16; 32).
 - `T` — monthly mean temperature, in °C
 - `P` — monthly precipitation, in mm/month
 - `lat` — latitude ($\phi$), in degrees
-- `ETP` — monthly PET, in mm/month (optional; if `None`, uses $58{.}93 \cdot BT$)
-- `limiar_correcao` — monthly temperature above which the latitude
+- `PET` — monthly PET, in mm/month (optional; if `None`, uses $58{.}93 \cdot BT$)
+- `correction_threshold` — monthly temperature above which the latitude
   correction applies, in °C (default 24; `None` corrects every month)
-- return — `id` (1–38), `classe` (zone name in Portuguese), `classe_en`
-  (original English name, as in the source),
-  `biotemperatura` (°C), `P_anual`, `ETP_anual` (mm) and `razao_ETP`
+- return — `id` (1–38), `class` (zone name, as in the source),
+  `biotemperature` (°C), `P_annual`, `PET_annual` (mm) and `PET_ratio`.
+  The Portuguese API returns `classe` (name in Portuguese) and `classe_en`
 
 **References:** Alvares, C. A. et al. (2013) *Meteorol. Z.* 22:711–728 ·
 Kottek, M. et al. (2006) *Meteorol. Z.* 15:259–263 · Thornthwaite, C. W. (1948)
@@ -1019,24 +1046,28 @@ Jungkunst, H. F. et al. (2021) *J. Plant Nutr. Soil Sci.* 184:5–11
 
 ## 10. Potential and Attainable Yield
 
-Module `agrometeorologiapy.produtividade`. FAO Agro-Ecological Zone model
+Module `agrometeorologiapy.en.crop_yield` (Portuguese API:
+`agrometeorologiapy.produtividade`). FAO Agro-Ecological Zone model
 (Doorenbos & Kassam, 1979), with the temperature corrections of Barbieri &
 Tuon (1992), in Pereira et al. (2002). Constants and tabulated values default
-to the usual values, but all of them are function parameters.
+to the usual values, but all of them are function parameters. Names follow
+the yield gap literature (van Ittersum et al., 2013): $Y_p$ is the potential
+yield and $Y_w$ the attainable (water-limited) yield — not $Y_a$, which there
+denotes the actual (observed) yield.
 
 ### n/N
-Without a sunshine recorder, the sunshine ratio comes from `relacao_n_N`
-(section 2), the inverted Ångström-Prescott equation. `produtividade_potencial`
-uses it when the df has `Qg` instead of `nN`.
+Without a sunshine recorder, the relative sunshine duration comes from
+`relative_sunshine_duration` (section 2), the inverted Angstrom formula.
+`potential_yield` uses it when the df has `Rs` instead of `nN`.
 
-### `cTn(T, rota, T_limiar=16.5)` · `cTc(T, rota, T_limiar=16.5)`
-Temperature corrections of photosynthesis for overcast ($cT_n$) and clear
+### `temperature_correction_overcast(T, pathway, T_threshold=16.5)` · `temperature_correction_clear(...)` · pt: `cTn`, `cTc`
+Temperature corrections of photosynthesis for overcast ($cT_o$) and clear
 ($cT_c$) sky, clipped at zero.
 
 **C3** (soybean, wheat, bean, sunflower):
 
 ```math
-cT_n = -0.0425 + 0.035\,T + 0.00325\,T^2 - 0.0000925\,T^3
+cT_o = -0.0425 + 0.035\,T + 0.00325\,T^2 - 0.0000925\,T^3
 ```
 
 ```math
@@ -1045,93 +1076,97 @@ cT_c = 0.583 + 0.014\,T + 0.0013\,T^2 - 0.000037\,T^3
 
 **C4** (maize, sorghum, sugarcane):
 
-| Condition | $cT_n$ | $cT_c$ |
+| Condition | $cT_o$ | $cT_c$ |
 |---|---|---|
 | $T \ge 16.5$ °C | $-1.064 + 0.173 T - 0.0029 T^2$ | $-4.16 + 0.4325 T - 0.00725 T^2$ |
 | $T < 16.5$ °C | $-4.16 + 0.4325 T - 0.00725 T^2$ | $-9.32 + 0.865 T - 0.0145 T^2$ |
 
 **Where:**
 - `T` — mean air temperature of the period, °C
-- `rota` — photosynthetic pathway, `'C3'` or `'C4'` (required)
-- `T_limiar` — polynomial switch for C4 crops, °C (default 16.5)
+- `pathway` — photosynthetic pathway, `'C3'` or `'C4'` (required)
+- `T_threshold` — polynomial switch for C4 crops, °C (default 16.5)
 
-### `PPBp(Qo, nN, cTc, cTn, a_c=107.2, b_c=8.604, a_n=31.7, b_n=5.234)`
-Standard gross potential productivity of the standard crop (LAI = 5):
+### `gross_potential_productivity(Ra, nN, cTc, cTo, a_c=107.2, b_c=8.604, a_o=31.7, b_o=5.234)` · pt: `PPBp`
+Gross potential productivity of the standard crop (LAI = 5):
 
 ```math
-PPB_c = (107.2 + 8.604\,Q_o)\, cT_c\, \frac{n}{N} \qquad PPB_n = (31.7 + 5.234\,Q_o)\, cT_n \left(1 - \frac{n}{N}\right)
+GP_c = (107.2 + 8.604\,R_a)\, cT_c\, \frac{n}{N} \qquad GP_o = (31.7 + 5.234\,R_a)\, cT_o \left(1 - \frac{n}{N}\right)
 ```
 
 ```math
-PPBp = PPB_c + PPB_n
+GP = GP_c + GP_o
 ```
 
 **Where:**
-- `Qo` — extraterrestrial irradiance, MJ m⁻² d⁻¹
-- `nN` — sunshine ratio
-- $PPBp$ (return) — kg DM ha⁻¹ d⁻¹
-- the coefficients are Doorenbos & Kassam's (0.36 and 0.219, with $Q_o$ in
-  cal cm⁻² d⁻¹) converted to MJ m⁻² d⁻¹
+- `Ra` — extraterrestrial radiation, MJ m⁻² day⁻¹
+- `nN` — relative sunshine duration
+- $GP$ (return) — kg DM ha⁻¹ day⁻¹
+- the coefficients are Doorenbos & Kassam's (0.36 and 0.219, with $R_a$ in
+  cal cm⁻² day⁻¹) converted to MJ m⁻² day⁻¹
 
-### `CIAF(IAF, IAF_padrao=5.0)` · `CR(T, T_limiar=20.0, CR_frio=0.6, CR_quente=0.5)`
+### `lai_correction(LAI, LAI_standard=5.0)` · `respiration_correction(T, T_threshold=20.0, CR_cool=0.6, CR_warm=0.5)` · pt: `CIAF`, `CR`
 Leaf area index correction and maintenance respiration correction:
 
 ```math
-CIAF = 0.0093 + 0.185\,LAI - 0.0175\,LAI^2 \;\;(LAI < 5), \qquad CIAF = 0.5 \;\;(LAI \ge 5)
+LAI_{corr} = 0.0093 + 0.185\,LAI - 0.0175\,LAI^2 \;\;(LAI < 5), \qquad LAI_{corr} = 0.5 \;\;(LAI \ge 5)
 ```
 
 ```math
 CR = 0.6 \;\;(T < 20\ °C), \qquad CR = 0.5 \;\;(T \ge 20\ °C)
 ```
 
-### `produtividade_potencial(df, lat, rota, IAF=5.0, Cc=0.35, U=13.0, intervalo='dec', semeadura=None, ciclo=None, ...)`
-Accumulates potential yield period by period over the crop cycle:
+### `potential_yield(df, lat, pathway, LAI=5.0, HI=0.35, moisture=13.0, interval='dekad', sowing=None, cycle=None, ...)` · pt: `produtividade_potencial`
+Accumulates the potential yield period by period over the crop cycle:
 
 ```math
-PPf = \frac{\sum_{p} PPBp_p \cdot ND_p \cdot CIAF \cdot CR_p \cdot C_c}{1 - 0.01\,U}
+Y_p = \frac{\sum_{p} GP_p \cdot ND_p \cdot LAI_{corr} \cdot CR_p \cdot HI}{1 - 0.01\,moisture}
 ```
 
 **Where:**
-- `df` — one row per period: `Tmed` (°C); radiation as `nN`, as `n` and `N`,
-  or as `Qg` (MJ m⁻² d⁻¹); `Qo` (optional, computed from `lat` and the dates);
-  dates in `data`, a DatetimeIndex or `dia` and `mes` (+ `ano`); `ND` (optional)
-- `intervalo` — time step: `'d'` (daily), `'dec'` (calendar 10-day period:
+- `df` — one row per period: `Tmean` (°C); radiation as `nN`, as `n` and
+  `N`, or as `Rs` (MJ m⁻² day⁻¹); `Ra` (optional, computed from `lat` and the
+  dates); dates in `date`, a DatetimeIndex or `day` and `month` (+ `year`);
+  `ND` (optional)
+- `interval` — time step: `'d'` (daily), `'dekad'` (calendar 10-day period:
   1–10, 11–20 and 21–end of month, 8 to 11 days) or `'M'` (monthly)
-- $ND_p$ — days of the period with the crop in the field. With `semeadura`
-  (sowing date) and `ciclo` (days, counting the sowing day), the first and
+- $ND_p$ — days of the period with the crop in the field. With `sowing`
+  (sowing date) and `cycle` (days, counting the sowing day), the first and
   last periods are partial and periods outside the cycle are dropped
-- `IAF`, `Cc`, `U` — maximum LAI, harvest index and product moisture, %
-- return — DataFrame with `ND`, `Qo`, `nN`, `cTn`, `cTc`, `PPBc`, `PPBn`,
-  `PPBp`, `CR`, `PPf_periodo` and `PPf_acum` (kg ha⁻¹); `attrs['PPf']`
+- `LAI`, `HI`, `moisture` — maximum LAI, harvest index and moisture content
+  of the product, %
+- return — DataFrame with `ND`, `Ra`, `nN`, `cTo`, `cTc`, `GPc`, `GPo`,
+  `GP`, `CR`, `Yp_period` and `Yp_cum` (kg ha⁻¹); `attrs['Yp']`
 
-### `produtividade_atingivel(PPf, ETR, ETc, ky, fase=None, metodo='produtorio')`
+### `attainable_yield(Yp, ETa, ETc, ky, phase=None, method='product')` · pt: `produtividade_atingivel`
 Water-deficit penalty:
 
 ```math
-1 - \frac{PA}{PPf} = k_y \left(1 - \frac{ETR}{ETc}\right)
+1 - \frac{Y_w}{Y_p} = k_y \left(1 - \frac{ETa}{ETc}\right)
 ```
 
-- **Product** (`'produtorio'`, Battisti et al., 2013), phase by phase in sequence:
+- **Product** (`'product'`, Battisti et al., 2013), phase by phase in sequence:
 
-  $`\displaystyle PA = PPf \cdot \prod_i \left[1 - k_{y,i}\left(1 - \frac{ETR_i}{ETc_i}\right)\right]`$
+  $`\displaystyle Y_w = Y_p \cdot \prod_i \left[1 - k_{y,i}\left(1 - \frac{ETa_i}{ETc_i}\right)\right]`$
 
-- **Single step** (`'etapa_unica'`), with the whole-cycle $k_y$:
+- **Single step** (`'single'`), with the whole-cycle $k_y$:
 
-  $`\displaystyle PA = PPf \cdot \left[1 - k_{y,cycle}\left(1 - \frac{\sum ETR}{\sum ETc}\right)\right]`$
+  $`\displaystyle Y_w = Y_p \cdot \left[1 - k_{y,cycle}\left(1 - \frac{\sum ETa}{\sum ETc}\right)\right]`$
 
 ```math
-EC = \frac{PA}{PPf}
+CE = \frac{Y_w}{Y_p}
 ```
 
 **Where:**
-- `ETR`, `ETc` — mm, per phase or per period (e.g. output of
-  `balanco_hidrico_cultura`); with `fase`, they are summed per phase
+- `ETa`, `ETc` — mm, per phase or per period (e.g. output of
+  `crop_water_balance`); with `phase`, they are summed per phase
 - `ky` — one per phase (sequence or dict `{phase: ky}`) or the whole-cycle value
 - each factor is clipped at zero; phases with $ETc = 0$ are not penalized
-- return — one row per phase with `ETc`, `ETR`, `ETR/ETc`, `ky`, `fator`,
-  `PA_inicial`, `PA_final`, `perda` and `EC`; `attrs['PA']` and `attrs['EC']`
+- return — one row per phase with `ETc`, `ETa`, `ETa/ETc`, `ky`, `factor`,
+  `Yw_start`, `Yw_end`, `loss` and `CE` (climatic efficiency);
+  `attrs['Yw']` and `attrs['CE']`
 
 **References:** Doorenbos, J.; Kassam, A. H. (1979) *Yield response to water*,
 FAO Irrigation and Drainage Paper 33 · Barbieri, V.; Tuon, R. L. (1992) ESALQ/USP ·
 Pereira, A. R.; Angelocci, L. R.; Sentelhas, P. C. (2002) *Agrometeorologia* ·
-Battisti, R. et al. (2013) *Ciência Rural* 43:390–396
+Battisti, R. et al. (2013) *Ciência Rural* 43:390–396 · van Ittersum, M. K.
+et al. (2013) *Field Crops Res.* 143:4–17

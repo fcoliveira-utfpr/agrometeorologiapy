@@ -1,10 +1,22 @@
-"""Capítulo 6 — Temperatura."""
+"""Capítulo 6 — Temperatura.
 
-__all__ = ["temp_media_extremos", "temp_media_estacao_automatica"]
+API em português. A implementação está no núcleo em inglês,
+`agrometeorologiapy.en.temperature`; aqui ficam só os nomes, a tradução
+dos parâmetros e a documentação em português.
+"""
+
+from ._i18n import tradutor
+from .en import temperature as _en
+
+_traduzir = tradutor(__name__)
+
+__all__ = [
+    "temp_media_extremos",
+    "temp_media_estacao_automatica",
+]
 
 
-def temp_media_extremos(Tmax, Tmin):
-    """
+temp_media_extremos = _traduzir(_en.mean_temperature, "temp_media_extremos", {}, doc="""
     Temperatura média diária estimada pela média dos valores
     extremos (máxima e mínima).
 
@@ -22,12 +34,13 @@ def temp_media_extremos(Tmax, Tmin):
     -------
     Tmed : float
         Temperatura média diária estimada, em °C.
-    """
-    return (Tmax + Tmin) / 2
+    """)
 
 
-def temp_media_estacao_automatica(temperaturas):
-    """
+temp_media_estacao_automatica = _traduzir(
+    _en.mean_temperature_observations, "temp_media_estacao_automatica",
+    {'temperaturas': 'temperatures'},
+    doc="""
     Temperatura média a partir de observações de estações
     automáticas (média aritmética simples de N observações no período).
 
@@ -43,5 +56,4 @@ def temp_media_estacao_automatica(temperaturas):
     -------
     Tmed : float
         Temperatura média do período, em °C.
-    """
-    return sum(temperaturas) / len(temperaturas)
+    """)

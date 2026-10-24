@@ -12,6 +12,13 @@ tutorial executável, veja
 fundamentos e aplicações práticas*, ESALQ/USP, complementado por Allen et al.
 (1998, FAO-56) nos métodos de evapotranspiração.
 
+> ℹ️ **Nomes em português e em inglês:** este documento usa a API em
+> português (`import agrometeorologiapy as amp`). As mesmas funções existem
+> com nomes em inglês, em `agrometeorologiapy.en`, que é a implementação
+> única das duas APIs; a correspondência completa está em
+> [API_PT_EN.md](API_PT_EN.md), e a documentação em inglês, em
+> [FORMULAS.en.md](FORMULAS.en.md).
+
 > ⚠️ **Convenção de ângulos:** todas as funções trigonométricas do pacote
 > (`sind`, `cosd`, `tand`, `acosd`, e por extensão toda função que calcula
 > ângulos) trabalham em **graus**, não em radianos.

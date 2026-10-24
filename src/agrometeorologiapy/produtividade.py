@@ -1,22 +1,32 @@
 """Capítulo 12 — Produtividade potencial e atingível (Zona Agroecológica da FAO).
 
-Modelo de Doorenbos & Kassam (1979), com as correções de temperatura de
-Barbieri & Tuon (1992) (em Pereira et al., 2002) e a razão de insolação
-obtida pela inversão da equação de Angström-Prescott.
+API em português. A implementação está no núcleo em inglês,
+`agrometeorologiapy.en.crop_yield`; aqui ficam só os nomes, a tradução
+dos parâmetros e a documentação em português.
 """
 
-from calendar import monthrange
+import pandas as pd  # usado nos exemplos (doctests)
 
-import numpy as np
-import pandas as pd
+from ._i18n import tradutor
+from .en import crop_yield as _en
 
-from .radiacao import (
-    angulo_horario_nascer,
-    declinacao_solar,
-    fator_correcao_distancia,
-    irradiancia_extraterrestre,
-    relacao_n_N,
-)
+_ENTRADA_PP = {'data': 'date', 'dia': 'day', 'mes': 'month', 'ano': 'year', 'Tmed': 'Tmean',
+               'Qg': 'Rs', 'Qo': 'Ra'}
+_SAIDA_PP = {**{en: pt for pt, en in _ENTRADA_PP.items()},
+             'cTo': 'cTn', 'GPc': 'PPBc', 'GPo': 'PPBn', 'GP': 'PPBp', 'Yp_period': 'PPf_periodo',
+             'Yp_cum': 'PPf_acum', 'Yp': 'PPf', 'LAI_corr': 'CIAF'}
+_SAIDA_PA = {'ETa': 'ETR', 'ETa/ETc': 'ETR/ETc', 'factor': 'fator', 'Yw_start': 'PA_inicial',
+             'Yw_end': 'PA_final', 'loss': 'perda', 'CE': 'EC', 'Yp': 'PPf', 'Yw': 'PA'}
+
+
+def _indice_em_portugues(tab, kw):
+    """Índice da tabela da PA: 'phase' -> 'fase' e o rótulo 'cycle' -> 'ciclo'."""
+    if kw.get('method') == 'single':
+        tab.index = tab.index.map({'cycle': 'ciclo'})
+    tab.index.name = 'fase'
+    return tab
+
+_traduzir = tradutor(__name__)
 
 __all__ = [
     "cTn",
@@ -29,25 +39,9 @@ __all__ = [
 ]
 
 
-def _como_entrada(valor, ref):
-    """Devolve `valor` no mesmo tipo de `ref`: float para escalar, Series
-    com o mesmo índice para Series, numpy.ndarray nos demais casos."""
-    if isinstance(ref, pd.Series):
-        return pd.Series(np.asarray(valor, dtype=float), index=ref.index)
-    if np.ndim(ref) == 0:
-        return float(valor)
-    return np.asarray(valor, dtype=float)
-
-
-def _rota(rota):
-    r = str(rota).upper()
-    if r not in ("C3", "C4"):
-        raise ValueError("rota deve ser 'C3' ou 'C4'.")
-    return r
-
-
-def cTn(T, rota, T_limiar=16.5):
-    """
+cTn = _traduzir(
+    _en.temperature_correction_overcast, "cTn", {'rota': 'pathway', 'T_limiar': 'T_threshold'},
+    doc="""
     Correção de temperatura da fotossíntese para o céu nublado (cTn),
     pelos polinômios de Barbieri & Tuon (1992), limitada a zero.
 
@@ -75,20 +69,12 @@ def cTn(T, rota, T_limiar=16.5):
     --------
     >>> round(cTn(25, 'C3'), 3), round(cTn(25, 'C4'), 3)
     (1.418, 1.448)
-    """
-    rota = _rota(rota)
-    t = np.asarray(T, dtype=float)
-    if rota == "C4":
-        c = np.where(t >= T_limiar,
-                     -1.064 + 0.173 * t - 0.0029 * t ** 2,
-                     -4.16 + 0.4325 * t - 0.00725 * t ** 2)
-    else:
-        c = -0.0425 + 0.035 * t + 0.00325 * t ** 2 - 0.0000925 * t ** 3
-    return _como_entrada(np.clip(c, 0.0, None), T)
+    """)
 
 
-def cTc(T, rota, T_limiar=16.5):
-    """
+cTc = _traduzir(
+    _en.temperature_correction_clear, "cTc", {'rota': 'pathway', 'T_limiar': 'T_threshold'},
+    doc="""
     Correção de temperatura da fotossíntese para o céu claro (cTc),
     pelos polinômios de Barbieri & Tuon (1992), limitada a zero.
 
@@ -115,20 +101,13 @@ def cTc(T, rota, T_limiar=16.5):
     --------
     >>> round(cTc(25, 'C3'), 3), round(cTc(25, 'C4'), 3)
     (1.167, 2.121)
-    """
-    rota = _rota(rota)
-    t = np.asarray(T, dtype=float)
-    if rota == "C4":
-        c = np.where(t >= T_limiar,
-                     -4.16 + 0.4325 * t - 0.00725 * t ** 2,
-                     -9.32 + 0.865 * t - 0.0145 * t ** 2)
-    else:
-        c = 0.583 + 0.014 * t + 0.0013 * t ** 2 - 0.000037 * t ** 3
-    return _como_entrada(np.clip(c, 0.0, None), T)
+    """)
 
 
-def PPBp(Qo, nN, cTc, cTn, a_c=107.2, b_c=8.604, a_n=31.7, b_n=5.234):
-    """
+PPBp = _traduzir(
+    _en.gross_potential_productivity, "PPBp",
+    {'Qo': 'Ra', 'cTn': 'cTo', 'a_n': 'a_o', 'b_n': 'b_o'},
+    doc="""
     Produtividade potencial bruta padrão (PPBp) da cultura padrão
     hipotética (IAF = 5, sem restrição de água e nutrientes), soma das
     frações de céu claro e de céu nublado do dia.
@@ -162,14 +141,10 @@ def PPBp(Qo, nN, cTc, cTn, a_c=107.2, b_c=8.604, a_n=31.7, b_n=5.234):
     --------
     >>> round(PPBp(42.96, 0.501, cTc=2.210, cTn=1.484), 0)
     718.0
-    """
-    PPBc = (a_c + b_c * np.asarray(Qo, dtype=float)) * cTc * nN
-    PPBn = (a_n + b_n * np.asarray(Qo, dtype=float)) * cTn * (1 - np.asarray(nN, dtype=float))
-    return _como_entrada(PPBc + PPBn, Qo)
+    """)
 
 
-def CIAF(IAF, IAF_padrao=5.0):
-    """
+CIAF = _traduzir(_en.lai_correction, "CIAF", {'IAF': 'LAI', 'IAF_padrao': 'LAI_standard'}, doc="""
     Correção do índice de área foliar (CIAF): ajusta a cultura padrão
     (IAF = 5) ao IAF máximo da cultura.
 
@@ -192,14 +167,13 @@ def CIAF(IAF, IAF_padrao=5.0):
     --------
     >>> round(CIAF(4.5), 3), CIAF(5)
     (0.487, 0.5)
-    """
-    i = np.asarray(IAF, dtype=float)
-    c = np.where(i >= IAF_padrao, 0.5, 0.0093 + 0.185 * i - 0.0175 * i ** 2)
-    return _como_entrada(c, IAF)
+    """)
 
 
-def CR(T, T_limiar=20.0, CR_frio=0.6, CR_quente=0.5):
-    """
+CR = _traduzir(
+    _en.respiration_correction, "CR",
+    {'T_limiar': 'T_threshold', 'CR_frio': 'CR_cool', 'CR_quente': 'CR_warm'},
+    doc="""
     Correção para a respiração de manutenção (CR), conforme a temperatura
     média do período.
 
@@ -223,54 +197,18 @@ def CR(T, T_limiar=20.0, CR_frio=0.6, CR_quente=0.5):
     --------
     >>> CR(18.0), CR(26.5)
     (0.6, 0.5)
-    """
-    c = np.where(np.asarray(T, dtype=float) < T_limiar, CR_frio, CR_quente)
-    return _como_entrada(c, T)
+    """)
 
 
-def _inicio_periodos(df, intervalo, ano):
-    """Data de início de cada período (pandas.DatetimeIndex) ou None, se o
-    df não traz datas. Aceita a coluna 'data', um DatetimeIndex ou as
-    colunas 'dia' e 'mes' (+ 'ano' opcional; sem ela, o ano começa em `ano`
-    e avança quando o mês diminui)."""
-    if 'data' in df.columns:
-        datas = pd.DatetimeIndex(pd.to_datetime(df['data']))
-    elif isinstance(df.index, pd.DatetimeIndex):
-        datas = df.index
-    elif {'dia', 'mes'} <= set(df.columns):
-        meses = df['mes'].astype(int).to_numpy()
-        if 'ano' in df.columns:
-            anos = df['ano'].astype(int).to_numpy()
-        else:
-            anos = ano + np.concatenate([[0], np.cumsum(np.diff(meses) < 0)])
-        datas = pd.DatetimeIndex([pd.Timestamp(int(a), int(m), int(d))
-                                  for a, m, d in zip(anos, meses, df['dia'].astype(int))])
-    else:
-        return None
-
-    # Normaliza para o início do período do calendário.
-    if intervalo == 'dec':
-        dia_ini = np.minimum((datas.day - 1) // 10, 2) * 10 + 1
-        datas = pd.DatetimeIndex([pd.Timestamp(d.year, d.month, int(di)) for d, di in zip(datas, dia_ini)])
-    elif intervalo == 'M':
-        datas = pd.DatetimeIndex([pd.Timestamp(d.year, d.month, 1) for d in datas])
-    return datas.normalize()
-
-
-def _dias_periodo(inicio, intervalo):
-    """Número de dias do período do calendário que começa em `inicio`."""
-    if intervalo == 'd':
-        return 1
-    dias_mes = monthrange(inicio.year, inicio.month)[1]
-    if intervalo == 'M':
-        return dias_mes
-    return 10 if inicio.day <= 11 else dias_mes - 20
-
-
-def produtividade_potencial(df, lat, rota, IAF=5.0, Cc=0.35, U=13.0, intervalo='dec',
-                            semeadura=None, ciclo=None, ano=2023, a=None, b=0.52,
-                            T_limiar_CR=20.0, CR_frio=0.6, CR_quente=0.5):
-    """
+produtividade_potencial = _traduzir(
+    _en.potential_yield, "produtividade_potencial",
+    {'rota': 'pathway', 'IAF': 'LAI', 'Cc': 'HI', 'U': 'moisture', 'intervalo': 'interval',
+     'semeadura': 'sowing', 'ciclo': 'cycle', 'ano': 'year', 'T_limiar_CR': 'T_threshold_CR',
+     'CR_frio': 'CR_cool', 'CR_quente': 'CR_warm'},
+    valores={'interval': {'dec': 'dekad'}},
+    colunas_entrada=_ENTRADA_PP,
+    colunas_saida=_SAIDA_PP,
+    doc="""
     Produtividade potencial (PPf) pelo Modelo da Zona Agroecológica da FAO
     (Doorenbos & Kassam, 1979), acumulada período a período ao longo do
     ciclo da cultura.
@@ -346,83 +284,16 @@ def produtividade_potencial(df, lat, rota, IAF=5.0, Cc=0.35, U=13.0, intervalo='
     >>> pp = produtividade_potencial(df, lat=-24.86, rota='C4', IAF=5.0, Cc=0.35, U=13)
     >>> round(float(pp['PPBp'].iloc[0]), 0), round(pp.attrs['PPf'], 0)
     (718.0, 722.0)
-    """
-    if intervalo not in ('d', 'dec', 'M'):
-        raise ValueError("intervalo deve ser 'd', 'dec' ou 'M'")
-    if (semeadura is None) != (ciclo is None):
-        raise ValueError("Informe semeadura e ciclo juntos.")
-    rota = _rota(rota)
-
-    res = df.copy()
-    inicio = _inicio_periodos(res, intervalo, ano)
-
-    # ---------- Dias de cada período no campo (ND) ----------
-    if semeadura is not None:
-        if inicio is None:
-            raise ValueError("Para usar semeadura, o df precisa de datas ('data', DatetimeIndex ou 'dia' e 'mes').")
-        sem = pd.Timestamp(semeadura).normalize()
-        fim_ciclo = sem + pd.Timedelta(days=int(ciclo) - 1)
-        nd_cal = (res['ND'].to_numpy(dtype=float) if 'ND' in res.columns
-                  else np.array([_dias_periodo(d, intervalo) for d in inicio], dtype=float))
-        fim = inicio + pd.to_timedelta(nd_cal - 1, unit='D')
-        ini_campo = inicio.where(inicio > sem, sem)
-        fim_campo = fim.where(fim < fim_ciclo, fim_ciclo)
-        nd = np.maximum(np.asarray((fim_campo - ini_campo).days) + 1, 0)
-        no_ciclo = nd > 0
-        if inicio[0] > sem or fim[-1] < fim_ciclo:
-            raise ValueError("O df não cobre todo o ciclo (da semeadura a semeadura + ciclo - 1).")
-        res = res.loc[no_ciclo].copy()
-        res['ND'] = nd[no_ciclo]
-        inicio = ini_campo[no_ciclo]
-    elif 'ND' not in res.columns:
-        if intervalo == 'd':
-            res['ND'] = 1
-        elif inicio is None:
-            raise ValueError("Para intervalo 'dec' ou 'M', o df precisa de datas ou da coluna 'ND'.")
-        else:
-            res['ND'] = [_dias_periodo(d, intervalo) for d in inicio]
-
-    # ---------- Qo: média diária nos dias do período no campo ----------
-    if 'Qo' not in res.columns:
-        if inicio is None:
-            raise ValueError("Sem a coluna 'Qo', o df precisa de datas para calculá-la.")
-        qo = []
-        for d0, nd in zip(inicio, res['ND'].astype(int)):
-            nda = np.array([(d0 + pd.Timedelta(days=k)).dayofyear for k in range(nd)])
-            dec = declinacao_solar(nda)
-            Hn = angulo_horario_nascer(lat, dec)
-            qo.append(irradiancia_extraterrestre(lat, dec, Hn, fator_correcao_distancia(nda)).mean())
-        res['Qo'] = qo
-
-    # ---------- Razão de insolação ----------
-    if 'nN' in res.columns:
-        res['nN'] = res['nN'].clip(0, 1)
-    elif {'n', 'N'} <= set(res.columns):
-        res['nN'] = (res['n'] / res['N']).clip(0, 1)
-    elif 'Qg' in res.columns:
-        res['nN'] = relacao_n_N(res['Qg'], res['Qo'], lat, b=b, a=a)
-    else:
-        raise ValueError("O df precisa de 'nN', de 'n' e 'N' ou de 'Qg'.")
-
-    # ---------- PPBp e PPf ----------
-    res['cTn'] = cTn(res['Tmed'], rota)
-    res['cTc'] = cTc(res['Tmed'], rota)
-    res['PPBc'] = (107.2 + 8.604 * res['Qo']) * res['cTc'] * res['nN']
-    res['PPBn'] = (31.7 + 5.234 * res['Qo']) * res['cTn'] * (1 - res['nN'])
-    res['PPBp'] = res['PPBc'] + res['PPBn']
-    res['CR'] = CR(res['Tmed'], T_limiar=T_limiar_CR, CR_frio=CR_frio, CR_quente=CR_quente)
-
-    ciaf = CIAF(IAF)
-    res['PPf_periodo'] = res['PPBp'] * res['ND'] * ciaf * res['CR'] * Cc / (1 - 0.01 * U)
-    res['PPf_acum'] = res['PPf_periodo'].cumsum()
-
-    res.attrs['PPf'] = float(res['PPf_acum'].iloc[-1]) if len(res) else 0.0
-    res.attrs['CIAF'] = ciaf
-    return res
+    """)
 
 
-def produtividade_atingivel(PPf, ETR, ETc, ky, fase=None, metodo='produtorio'):
-    """
+produtividade_atingivel = _traduzir(
+    _en.attainable_yield, "produtividade_atingivel",
+    {'PPf': 'Yp', 'ETR': 'ETa', 'fase': 'phase', 'metodo': 'method'},
+    valores={'method': {'produtorio': 'product', 'etapa_unica': 'single'}},
+    colunas_saida=_SAIDA_PA,
+    pos=_indice_em_portugues,
+    doc="""
     Produtividade atingível (PA): a PPf penalizada pelo déficit hídrico,
     pela relação de Doorenbos & Kassam (1979):
 
@@ -474,48 +345,4 @@ def produtividade_atingivel(PPf, ETR, ETc, ky, fase=None, metodo='produtorio'):
     >>> pa1 = produtividade_atingivel(1000, etr, etc, ky=1.25, metodo='etapa_unica')
     >>> round(pa1.attrs['EC'], 3)
     0.78
-    """
-    ETR = np.asarray(ETR, dtype=float)
-    ETc = np.asarray(ETc, dtype=float)
-    if ETR.shape != ETc.shape:
-        raise ValueError("ETR e ETc devem ter o mesmo tamanho.")
-
-    if metodo == 'etapa_unica':
-        if np.ndim(ky) != 0:
-            raise ValueError("Na etapa única, ky deve ser o ky do ciclo (escalar).")
-        tab = pd.DataFrame({'ETc': [ETc.sum()], 'ETR': [ETR.sum()]}, index=pd.Index(['ciclo'], name='fase'))
-        ky_fases = [float(ky)]
-    elif metodo == 'produtorio':
-        if fase is None:
-            tab = pd.DataFrame({'ETc': ETc, 'ETR': ETR}, index=pd.RangeIndex(len(ETc), name='fase'))
-        else:
-            fase = np.asarray(fase)
-            if fase.shape != ETR.shape:
-                raise ValueError("fase deve ter o mesmo tamanho de ETR e ETc.")
-            tab = (pd.DataFrame({'fase': fase, 'ETc': ETc, 'ETR': ETR})
-                   .groupby('fase', sort=False)[['ETc', 'ETR']].sum())
-        if isinstance(ky, dict):
-            ky_fases = [float(ky[f]) for f in tab.index]
-        else:
-            ky_fases = list(np.atleast_1d(np.asarray(ky, dtype=float)))
-            if len(ky_fases) != len(tab):
-                raise ValueError(f"ky tem {len(ky_fases)} valores para {len(tab)} fases.")
-    else:
-        raise ValueError("metodo deve ser 'produtorio' ou 'etapa_unica'")
-
-    with np.errstate(divide='ignore', invalid='ignore'):
-        razao = np.where(tab['ETc'] > 0, tab['ETR'] / tab['ETc'], 1.0)
-    tab['ETR/ETc'] = razao
-    tab['ky'] = ky_fases
-    tab['fator'] = np.clip(1 - tab['ky'] * (1 - tab['ETR/ETc']), 0.0, None)
-
-    pa = PPf * np.cumprod(tab['fator'].to_numpy())
-    tab['PA_inicial'] = np.concatenate([[PPf], pa[:-1]])
-    tab['PA_final'] = pa
-    tab['perda'] = tab['PA_inicial'] - tab['PA_final']
-    tab['EC'] = pa / PPf if PPf else np.nan
-
-    tab.attrs['PPf'] = float(PPf)
-    tab.attrs['PA'] = float(pa[-1])
-    tab.attrs['EC'] = float(tab['EC'].iloc[-1])
-    return tab
+    """)

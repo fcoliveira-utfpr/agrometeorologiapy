@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.0.0] - 2026-10-24
+
+### Adicionado
+- **API em inglês**, `agrometeorologiapy.en` (`from agrometeorologiapy import en`),
+  com nomes, parâmetros e colunas em inglês e a terminologia da FAO-56
+  (Allen et al., 1998): `extraterrestrial_radiation(lat, declination, ws, dr)`,
+  `relative_sunshine_duration(Rs, Ra, lat)`, `eto_penman_monteith`,
+  `climatic_water_balance` (STO, APWL, ETa, DEF, SUR), `crop_water_balance`
+  (WRSI), `potential_yield` (Yp) e `attainable_yield` (Yw, CE) etc. A
+  correspondência completa está em `docs/API_PT_EN.md`.
+- `docs/FORMULAS.en.md` passa a documentar a API em inglês, com o nome em
+  português ao lado de cada função.
+- `examples/tutorial_colab_en.ipynb`: o tutorial do Colab em inglês, com a API
+  em inglês, o mesmo cenário e os mesmos resultados do tutorial em português.
+
+### Alterado
+- O núcleo do pacote passa a ser a implementação em inglês. Os módulos em
+  português (`radiacao`, `umidade`...) agora só traduzem nomes, parâmetros,
+  colunas e textos e chamam o núcleo, mantendo as docstrings em português.
+  **A API em português não muda e é permanente:** as mesmas funções, com os
+  mesmos parâmetros, colunas, valores e mensagens impressas (conferido
+  chamada a chamada contra a versão 0.3.0).
+- `produtividade_potencial`: usa `Timestamp.day_of_year` no lugar de
+  `dayofyear`, obsoleto no pandas 3.
+
 ## [0.3.0] - 2026-10-04
 
 ### Adicionado

@@ -1,10 +1,14 @@
-"""Capítulo 5 — Radiação solar."""
+"""Capítulo 5 — Radiação solar.
 
-from datetime import datetime
+API em português. A implementação está no núcleo em inglês,
+`agrometeorologiapy.en.radiation`; aqui ficam só os nomes, a tradução dos
+parâmetros e a documentação em português.
+"""
 
-import numpy as np
+from ._i18n import tradutor
+from .en import radiation as _en
 
-from ._trig import acosd, cosd, sind, tand
+_traduzir = tradutor(__name__)
 
 __all__ = [
     "nda",
@@ -24,8 +28,7 @@ __all__ = [
 ]
 
 
-def nda(dia, mes, ano=2023):
-    """
+nda = _traduzir(_en.day_of_year, "nda", {'dia': 'day', 'mes': 'month', 'ano': 'year'}, doc="""
     Retorna o Número do Dia do Ano (NDA).
 
     Parâmetros
@@ -50,13 +53,10 @@ def nda(dia, mes, ano=2023):
     359
     >>> nda(29, 2, 2024)
     60
-    """
-    dt = datetime(ano, mes, dia)
-    return dt.timetuple().tm_yday
+    """)
 
 
-def declinacao_solar(NDA):
-    """
+declinacao_solar = _traduzir(_en.solar_declination, "declinacao_solar", {'NDA': 'doy'}, doc="""
     Declinação solar (delta) para um dado dia do ano.
 
     Aproximação senoidal da variação anual da declinação solar, decorrente
@@ -72,12 +72,12 @@ def declinacao_solar(NDA):
     -------
     delta : float
         Declinação solar, em graus.
-    """
-    return 23.45 * sind(360 * (NDA - 80) / 365)
+    """)
 
 
-def angulo_horario(hora, minuto=0):
-    """
+angulo_horario = _traduzir(
+    _en.hour_angle, "angulo_horario", {'hora': 'hour', 'minuto': 'minute'},
+    doc="""
     Converte a hora local (hora solar verdadeira) em ângulo horário.
 
     A Terra gira 360° em 24h, ou seja, 15° por hora. O ângulo horário é nulo
@@ -95,13 +95,12 @@ def angulo_horario(hora, minuto=0):
     -------
     h : float
         Ângulo horário, em graus.
-    """
-    hora_decimal = hora + minuto / 60
-    return (hora_decimal - 12) * 15
+    """)
 
 
-def angulo_zenital(lat, declinacao):
-    """
+angulo_zenital = _traduzir(
+    _en.solar_zenith_angle, "angulo_zenital", {'declinacao': 'declination'},
+    doc="""
     Ângulo zenital do Sol.
 
     Obtida da equação geral do ângulo zenital (eq. 5.4) fazendo-se h = 0°
@@ -119,14 +118,12 @@ def angulo_zenital(lat, declinacao):
     -------
     Z : float
         Ângulo zenital, em graus.
-    """
-    cos_Z = sind(lat) * sind(declinacao) + cosd(lat) * cosd(declinacao)
-    cos_Z = max(-1.0, min(1.0, cos_Z))  # evita erro de domínio no acosd
-    return acosd(cos_Z)
+    """)
 
 
-def azimute_solar(lat, declinacao, Z):
-    """
+azimute_solar = _traduzir(
+    _en.solar_azimuth, "azimute_solar", {'declinacao': 'declination', 'Z': 'zenith'},
+    doc="""
     Azimute solar (alpha): direção horizontal do Sol em
     relação à linha Norte-Sul (referência Sul, no hemisfério sul).
 
@@ -143,14 +140,12 @@ def azimute_solar(lat, declinacao, Z):
     -------
     alpha : float
         Azimute solar, em graus.
-    """
-    num = sind(lat) * cosd(Z) - sind(declinacao)
-    den = cosd(lat) * sind(Z)
-    return acosd(num / den)
+    """)
 
 
-def comprimento_sombra(d, Z):
-    """
+comprimento_sombra = _traduzir(
+    _en.shadow_length, "comprimento_sombra", {'d': 'height', 'Z': 'zenith'},
+    doc="""
     Comprimento da sombra (S) projetada por um objeto de altura d.
 
     Quanto maior o ângulo zenital (Sol mais baixo no horizonte), maior a
@@ -167,12 +162,10 @@ def comprimento_sombra(d, Z):
     -------
     S : float
         Comprimento da sombra, na mesma unidade de d.
-    """
-    return d * tand(Z)
+    """)
 
 
-def fotoperiodo(Hn):
-    """
+fotoperiodo = _traduzir(_en.daylight_hours, "fotoperiodo", {'Hn': 'ws'}, doc="""
     Fotoperíodo (N), ou duração do dia, a partir do ângulo
     horário do nascer do Sol.
 
@@ -189,12 +182,12 @@ def fotoperiodo(Hn):
     -------
     N : float
         Fotoperíodo, em horas.
-    """
-    return 2 * Hn / 15
+    """)
 
 
-def angulo_horario_nascer(lat, declinacao):
-    """
+angulo_horario_nascer = _traduzir(
+    _en.sunset_hour_angle, "angulo_horario_nascer", {'declinacao': 'declination'},
+    doc="""
     Ângulo horário no nascer do Sol (Hn).
 
     Obtida impondo-se Z = 90° (cos Z = 0) na equação geral do ângulo
@@ -212,12 +205,12 @@ def angulo_horario_nascer(lat, declinacao):
     -------
     Hn : float
         Ângulo horário no nascer do Sol, em graus.
-    """
-    return acosd(-tand(lat) * tand(declinacao))
+    """)
 
 
-def fator_correcao_distancia(NDA):
-    """
+fator_correcao_distancia = _traduzir(
+    _en.inverse_relative_distance, "fator_correcao_distancia", {'NDA': 'doy'},
+    doc="""
     Fator de correção (d/D)^2 da excentricidade da órbita
     terrestre, para o dia do ano considerado.
 
@@ -234,12 +227,13 @@ def fator_correcao_distancia(NDA):
     -------
     (d/D)^2 : float
         Fator de correção adimensional.
-    """
-    return 1 + 0.033 * cosd(NDA * 360 / 365)
+    """)
 
 
-def irradiancia_extraterrestre(lat, declinacao, Hn, dD2):
-    """
+irradiancia_extraterrestre = _traduzir(
+    _en.extraterrestrial_radiation, "irradiancia_extraterrestre",
+    {'declinacao': 'declination', 'Hn': 'ws', 'dD2': 'dr'},
+    doc="""
     Irradiância solar global extraterrestre diária (Qo), no
     topo da atmosfera, para uma superfície horizontal.
 
@@ -263,13 +257,10 @@ def irradiancia_extraterrestre(lat, declinacao, Hn, dD2):
     -------
     Qo : float
         Irradiância solar global extraterrestre diária, em MJ/m² dia.
-    """
-    hn_rad = np.radians(Hn)
-    return 37.6 * dD2 * (hn_rad * sind(lat) * sind(declinacao) + cosd(lat) * cosd(declinacao) * sind(Hn))
+    """)
 
 
-def insolacao(N, Tmax, Tmin, lat, k=0.19):
-    """
+insolacao = _traduzir(_en.sunshine_duration, "insolacao", {}, doc="""
     Estimativa do número de horas de insolação (brilho solar), insol.
 
     Fórmula empírica baseada na amplitude térmica diária (Tmax - Tmin) e na
@@ -293,13 +284,12 @@ def insolacao(N, Tmax, Tmin, lat, k=0.19):
     -------
     insol : float
         Número de horas de insolação (brilho solar) estimado, em horas.
-    """
-    insol = (N / 0.52) * (k * (Tmax - Tmin) ** 0.5 - 0.29 * cosd(lat))
-    return insol
+    """)
 
 
-def Qg_angstrom(insolacao, N, Qo, lat, b=0.52):
-    """
+Qg_angstrom = _traduzir(
+    _en.solar_radiation_angstrom, "Qg_angstrom", {'insolacao': 'n', 'Qo': 'Ra'},
+    doc="""
     Equação de Angström-Prescott (variante de Glover-McCulloch): estimativa
     da radiação solar global a partir da razão de insolação n/N.
 
@@ -320,15 +310,12 @@ def Qg_angstrom(insolacao, N, Qo, lat, b=0.52):
     -------
     Qg : float
         Irradiância solar global, em MJ/m².
-    """
-    a = 0.29 * cosd(lat)
-    razao_insolacao = insolacao / N
-    Qg = Qo * (a + b * razao_insolacao)
-    return Qg
+    """)
 
 
-def relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True):
-    """
+relacao_n_N = _traduzir(
+    _en.relative_sunshine_duration, "relacao_n_N", {'Qg': 'Rs', 'Qo': 'Ra', 'limitar': 'clip'},
+    doc="""
     Razão de insolação n/N pela equação de Angström-Prescott (variante de
     Glover-McCulloch) invertida: a mesma fórmula de `Qg_angstrom`, resolvida
     para n/N a partir da radiação solar global.
@@ -366,17 +353,10 @@ def relacao_n_N(Qg, Qo, lat, b=0.52, a=None, limitar=True):
     >>> Qg = Qg_angstrom(9.0, 12.0, 30.0, -22.0)
     >>> round(relacao_n_N(Qg, 30.0, -22.0), 3)
     0.75
-    """
-    if a is None:
-        a = 0.29 * cosd(lat)
-    nN = (Qg / Qo - a) / b
-    if limitar:
-        nN = np.clip(nN, 0.0, 1.0)
-    return float(nN) if np.ndim(nN) == 0 else nN
+    """)
 
 
-def Qg_hargreaves(Tmax, Tmin, Qo, k=0.16):
-    """
+Qg_hargreaves = _traduzir(_en.solar_radiation_hargreaves, "Qg_hargreaves", {'Qo': 'Ra'}, doc="""
     Equação de Hargreaves-Samani: estimativa da radiação solar global a partir da
     amplitude térmica diária (Tmax - Tmin) e da radiação extraterrestre (Qo).
 
@@ -399,6 +379,4 @@ def Qg_hargreaves(Tmax, Tmin, Qo, k=0.16):
     -------
     Qg : float
         Irradiância solar global, em MJ/m².
-    """
-    Qg = k * (Tmax - Tmin) ** 0.5 * Qo
-    return Qg
+    """)

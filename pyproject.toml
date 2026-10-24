@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agrometeorologiapy"
-version = "0.3.0"
-description = "Fórmulas de agrometeorologia em Python: radiação solar e razão de insolação, temperatura, umidade, balanço de energia, evapotranspiração, grau-dias, balanço hídrico, classificação climática e produtividade potencial e atingível (Zona Agroecológica da FAO)."
+version = "1.0.0"
+description = "Fórmulas de agrometeorologia em Python: radiação solar e razão de insolação, temperatura, umidade, balanço de energia, evapotranspiração, grau-dias, balanço hídrico, classificação climática e produtividade potencial e atingível (Zona Agroecológica da FAO). API em português e em inglês (agrometeorologiapy.en)."
 readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
@@ -28,9 +28,14 @@ keywords = [
     "yield-gap",
     "zona-agroecologica",
     "fao",
+    "fao-56",
+    "crop-water-balance",
+    "potential-yield",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
+    "Natural Language :: English",
+    "Natural Language :: Portuguese (Brazilian)",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Programming Language :: Python :: 3",

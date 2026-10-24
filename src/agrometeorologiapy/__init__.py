@@ -6,8 +6,12 @@ Priestley-Taylor, Penman-Monteith FAO-56), grau-dias, balanço hídrico
 (climatológico e de cultura), classificação climática (Köppen-Geiger,
 Thornthwaite, Camargo e Holdridge) e produtividade potencial e atingível
 (Zona Agroecológica da FAO).
+
+As funções estão disponíveis com nomes em português (este nível) e em
+inglês (`agrometeorologiapy.en`), sobre uma única implementação.
 """
 
+from . import en
 from ._trig import acosd, cosd, sind, tand
 from .balanco_hidrico import (
     balanco_hidrico_climatologico,
@@ -73,7 +77,7 @@ from .umidade import (
     umidade_saturacao,
 )
 
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "sind", "cosd", "tand", "acosd",
