@@ -4,8 +4,9 @@ Funções para radiação solar, temperatura, umidade do ar, balanço de
 energia, evapotranspiração (Thornthwaite, Camargo-Maluf, Hargreaves-Samani,
 Priestley-Taylor, Penman-Monteith FAO-56), grau-dias, balanço hídrico
 (climatológico e de cultura), classificação climática (Köppen-Geiger,
-Thornthwaite, Camargo e Holdridge) e produtividade potencial e atingível
-(Zona Agroecológica da FAO).
+Thornthwaite, Camargo e Holdridge), produtividade potencial e atingível
+(Zona Agroecológica da FAO) e avaliação de modelos (RMSE, d de Willmott,
+NSE, KGE).
 
 As funções estão disponíveis com nomes em português (este nível) e em
 inglês (`agrometeorologiapy.en`), sobre uma única implementação.
@@ -13,6 +14,18 @@ inglês (`agrometeorologiapy.en`), sobre uma única implementação.
 
 from . import en
 from ._trig import acosd, cosd, sind, tand
+from .avaliacao_modelos import (
+    avaliar_modelo,
+    categoria_indice_confianca,
+    d_willmott,
+    indice_confianca,
+    kge,
+    mae,
+    mbe,
+    nse,
+    r_pearson,
+    rmse,
+)
 from .balanco_hidrico import (
     balanco_hidrico_climatologico,
     balanco_hidrico_climatologico_grade,
@@ -103,4 +116,6 @@ __all__ = [
     "classificacao_holdridge", "classificacao_holdridge_grade",
     "cTn", "cTc", "PPBp", "CIAF", "CR",
     "produtividade_potencial", "produtividade_atingivel",
+    "mbe", "mae", "rmse", "r_pearson", "d_willmott", "indice_confianca",
+    "categoria_indice_confianca", "nse", "kge", "avaliar_modelo",
 ]

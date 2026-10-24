@@ -11,9 +11,10 @@ calls the English function and translates the result back.
 import functools
 import inspect
 
+import numpy as np
 import pandas as pd
 
-__all__ = ["tradutor"]
+__all__ = ["tradutor", "rotulos"]
 
 
 def _inverter(mapa):
@@ -121,6 +122,16 @@ def traduzir(func, nome, parametros=None, *, modulo, doc=None, valores=None,
     wrapper.__en__ = func  # English core function
     wrapper.__fixos__ = dict(fixos)  # core arguments hidden from the Portuguese signature
     return wrapper
+
+
+def rotulos(mapa):
+    """Returns a `pos` function that translates class labels (a str or an
+    array of str) with `mapa` ({English label: Portuguese label})."""
+    def pos(resultado, kwargs_en):
+        if isinstance(resultado, str):
+            return mapa.get(resultado, resultado)
+        return np.array([mapa.get(r, r) for r in np.ravel(resultado)], dtype=object).astype(str).reshape(np.shape(resultado))
+    return pos
 
 
 def tradutor(modulo):

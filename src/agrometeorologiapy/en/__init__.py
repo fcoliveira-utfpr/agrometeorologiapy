@@ -84,6 +84,18 @@ from .crop_yield import (
     temperature_correction_clear,
     temperature_correction_overcast,
 )
+from .model_evaluation import (
+    confidence_index,
+    confidence_index_category,
+    evaluate_model,
+    kge,
+    mae,
+    mbe,
+    nse,
+    pearson_r,
+    rmse,
+    willmott_d,
+)
 
 __all__ = [
     "sind", "cosd", "tand", "acosd",
@@ -151,4 +163,15 @@ __all__ = [
     "respiration_correction",
     "potential_yield",
     "attainable_yield",
+    # model_evaluation
+    "mbe",
+    "mae",
+    "rmse",
+    "pearson_r",
+    "willmott_d",
+    "confidence_index",
+    "confidence_index_category",
+    "nse",
+    "kge",
+    "evaluate_model",
 ]
