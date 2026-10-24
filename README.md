@@ -3,143 +3,152 @@
 [![PyPI](https://img.shields.io/pypi/v/agrometeorologiapy.svg)](https://pypi.org/project/agrometeorologiapy/)
 [![CI](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml/badge.svg)](https://github.com/fcoliveira-utfpr/agrometeorologiapy/actions/workflows/ci.yml)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LICENSE)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb)
 
-Fórmulas de agrometeorologia em Python: radiação solar, temperatura, umidade
-do ar, balanço de energia, evapotranspiração (Thornthwaite, Camargo-Maluf,
-Hargreaves-Samani, Priestley-Taylor, Penman-Monteith FAO-56), grau-dias,
-balanço hídrico (climatológico e de cultura), classificação climática
-(Köppen-Geiger, Thornthwaite, Camargo e Holdridge) e produtividade potencial
-e atingível (Zona Agroecológica da FAO).
+*[🇧🇷 Português](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LEIAME.md)*
 
-## Instalação
+Agrometeorology formulas in Python: solar radiation and relative sunshine
+duration, air temperature and humidity, radiation balance, evapotranspiration
+(Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor, FAO
+Penman-Monteith), growing degree days, soil water balance (climatic and crop),
+climate classification (Köppen-Geiger, Thornthwaite, Camargo and Holdridge)
+and potential and attainable crop yield (FAO Agro-Ecological Zone model).
+
+Terms and symbols follow FAO Irrigation and Drainage Paper 56 (Allen et al.,
+1998) wherever they exist. Every function is available in two languages over
+a single implementation: an English API, `agrometeorologiapy.en`, and a
+Portuguese API at the top level of the package (see
+[Portuguese API](#portuguese-api)).
+
+## Installation
 
 ```bash
 pip install agrometeorologiapy
 ```
 
-## Tutorial interativo
+Requires Python 3.9+, NumPy and pandas.
 
-Quer ver o pacote em ação, função por função, sem instalar nada? Abra o
-tutorial direto no Google Colab:
+## Interactive tutorial
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb)
+Want to see the package in action, function by function, without installing
+anything? Open the tutorial in Google Colab:
 
-🇺🇸 **English:** the same tour with the English API —
-[`examples/tutorial_colab_en.ipynb`](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb).
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb)
 
-## Uso rápido
-
-```python
-import agrometeorologiapy as amp
-```
-
-### Radiação solar e razão de insolação
-
-```python
-lat = -24.86                                   # Santa Helena-PR
-nda = amp.nda(5, 1)                            # 5 de janeiro -> 5
-delta = amp.declinacao_solar(nda)              # -22,54°
-Hn = amp.angulo_horario_nascer(lat, delta)
-N = amp.fotoperiodo(Hn)                        # 13,48 h
-Qo = amp.irradiancia_extraterrestre(lat, delta, Hn, amp.fator_correcao_distancia(nda))  # 42,98 MJ/m² dia
-
-# n/N sem heliógrafo: Angström-Prescott invertida a partir da radiação global medida
-nN = amp.relacao_n_N(Qg=22.5, Qo=Qo, lat=lat)  # 0,501
-```
-
-### Evapotranspiração e balanço hídrico
-
-```python
-Tmax, Tmin = 31.2, 20.4
-Tmed = amp.temp_media_extremos(Tmax, Tmin)
-etp = amp.etp_hargreaves_samani(Qo, Tmax, Tmin, Tmed)   # 5,78 mm/dia
-
-import pandas as pd
-df = pd.DataFrame({
-    'Meses': ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
-    'P (mm/mês)':   [190, 160, 130, 110, 120, 100, 80, 70, 130, 180, 170, 180],
-    'ETP (mm/mês)': [135, 115, 110, 75, 50, 38, 40, 55, 70, 100, 115, 130],
-})
-bhc = amp.balanco_hidrico_climatologico(df, CAD=100)    # ARM, ETR, DEF e EXC por mês
-```
-
-### Produtividade potencial e atingível (Zona Agroecológica da FAO)
-
-Soja (C3) semeada em 15/10/2023, ciclo de 125 dias, com dados **mensais**
-(`intervalo` aceita `'d'`, `'dec'` ou `'M'`). Os meses da semeadura e da
-colheita contam só os dias com a cultura no campo, e Qo é calculada a partir
-das datas:
-
-```python
-safra = pd.DataFrame({
-    'dia':  [1, 1, 1, 1, 1],
-    'mes':  [10, 11, 12, 1, 2],
-    'Tmed': [22.8, 24.1, 25.6, 26.3, 25.9],      # °C
-    'Qg':   [19.8, 22.4, 23.1, 22.6, 21.0],      # MJ/m² dia
-})
-pp = amp.produtividade_potencial(safra, lat=-24.86, rota='C3', IAF=4.5, Cc=0.35, U=13,
-                                 intervalo='M', semeadura='2023-10-15', ciclo=125)
-pp[['mes', 'ND', 'nN', 'cTc', 'cTn', 'PPBp', 'PPf_acum']]   # PPf acumulada mês a mês
-PPf = pp.attrs['PPf']                                      # 5531 kg/ha
-
-# Penalização pelo déficit hídrico, com ETc e ETR de cada fase
-# (ex.: somadas a partir de amp.balanco_hidrico_cultura)
-ETc, ETR = [190, 110, 175, 60], [185, 80, 140, 55]
-
-# Por fase (produtório): um ky por fase, aplicado em sequência
-pa = amp.produtividade_atingivel(PPf, ETR, ETc, ky=[0.2, 0.8, 1.0, 0.0])
-pa.attrs['PA'], pa.attrs['EC']                             # 3441 kg/ha, 0,622
-
-# Etapa única: ky do ciclo
-pa1 = amp.produtividade_atingivel(PPf, ETR, ETc, ky=0.85, metodo='etapa_unica')
-pa1.attrs['PA'], pa1.attrs['EC']                           # 4872 kg/ha, 0,881
-```
-
-Cada fórmula do modelo também tem sua função (`cTn`, `cTc`, com `rota='C3'`
-ou `'C4'`, `PPBp`, `CIAF`, `CR`), e todas as constantes e valores tabelados
-são parâmetros com o valor usual como padrão (ex.: `U=13`, `b=0.52`).
-
-As funções também podem ser acessadas por submódulo (`amp.radiacao`,
-`amp.umidade`, `amp.evapotranspiracao`, etc.).
-
-### API em inglês / English API
-
-Todas as funções também existem com nomes em inglês, seguindo a terminologia
-da FAO-56, em `agrometeorologiapy.en`. As duas APIs compartilham uma única
-implementação e dão resultados idênticos; a API em português é permanente.
+## Quick start
 
 ```python
 from agrometeorologiapy import en as agm
-
-J = agm.day_of_year(5, 1)
-decl = agm.solar_declination(J)
-ws = agm.sunset_hour_angle(-24.86, decl)
-Ra = agm.extraterrestrial_radiation(-24.86, decl, ws, agm.inverse_relative_distance(J))
-nN = agm.relative_sunshine_duration(Rs=22.5, Ra=Ra, lat=-24.86)   # 0.501
 ```
 
-Correspondência completa dos nomes: [`docs/API_PT_EN.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/API_PT_EN.md).
+### Solar radiation and relative sunshine duration
 
-## Módulos
+```python
+lat = -24.86                                   # Santa Helena, Paraná, Brazil
+J = agm.day_of_year(5, 1)                      # January 5 -> 5
+decl = agm.solar_declination(J)                # -22.54°
+ws = agm.sunset_hour_angle(lat, decl)
+N = agm.daylight_hours(ws)                     # 13.48 h
+Ra = agm.extraterrestrial_radiation(lat, decl, ws, agm.inverse_relative_distance(J))  # 42.98 MJ m-2 day-1
 
-| Módulo (pt · en) | Conteúdo |
+# n/N without a sunshine recorder: the Angstrom formula solved for n/N from measured Rs
+nN = agm.relative_sunshine_duration(Rs=22.5, Ra=Ra, lat=lat)   # 0.501
+```
+
+### Evapotranspiration and water balance
+
+```python
+Tmax, Tmin = 31.2, 20.4
+Tmean = agm.mean_temperature(Tmax, Tmin)
+pet = agm.pet_hargreaves_samani(Ra, Tmax, Tmin, Tmean)   # 5.78 mm/day
+
+import pandas as pd
+df = pd.DataFrame({
+    'month': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    'P (mm/month)':   [190, 160, 130, 110, 120, 100, 80, 70, 130, 180, 170, 180],
+    'PET (mm/month)': [135, 115, 110, 75, 50, 38, 40, 55, 70, 100, 115, 130],
+})
+wb = agm.climatic_water_balance(df, AWC=100)   # STO, APWL, ETa, DEF and SUR per month
+```
+
+### Potential and attainable yield (FAO Agro-Ecological Zone model)
+
+Soybean (C3) sown on 2023-10-15, 125-day cycle, with **monthly** data
+(`interval` accepts `'d'`, `'dekad'` or `'M'`). The sowing and harvest months
+only count the days with the crop in the field, and Ra is computed from the
+dates:
+
+```python
+season = pd.DataFrame({
+    'day':   [1, 1, 1, 1, 1],
+    'month': [10, 11, 12, 1, 2],
+    'Tmean': [22.8, 24.1, 25.6, 26.3, 25.9],     # °C
+    'Rs':    [19.8, 22.4, 23.1, 22.6, 21.0],     # MJ m-2 day-1
+})
+yp = agm.potential_yield(season, lat=-24.86, pathway='C3', LAI=4.5, HI=0.35, moisture=13,
+                         interval='M', sowing='2023-10-15', cycle=125)
+yp[['month', 'ND', 'nN', 'cTc', 'cTo', 'GP', 'Yp_cum']]   # potential yield accumulated month by month
+Yp = yp.attrs['Yp']                                        # 5531 kg/ha
+
+# Water-deficit penalty, with ETc and ETa of each phase
+# (e.g. summed from agm.crop_water_balance)
+ETc, ETa = [190, 110, 175, 60], [185, 80, 140, 55]
+
+# By phase (product): one ky per phase, applied in sequence
+yw = agm.attainable_yield(Yp, ETa, ETc, ky=[0.2, 0.8, 1.0, 0.0])
+yw.attrs['Yw'], yw.attrs['CE']                             # 3441 kg/ha, 0.622
+
+# Single step: whole-cycle ky
+yw1 = agm.attainable_yield(Yp, ETa, ETc, ky=0.85, method='single')
+yw1.attrs['Yw'], yw1.attrs['CE']                           # 4872 kg/ha, 0.881
+```
+
+Names follow the yield gap literature (van Ittersum et al., 2013): Yp is the
+potential yield, Yw the attainable (water-limited) yield and CE = Yw/Yp the
+climatic efficiency. Each formula of the model also has its own function
+(`temperature_correction_overcast` and `temperature_correction_clear`, with
+`pathway='C3'` or `'C4'`, `gross_potential_productivity`, `lai_correction`,
+`respiration_correction`), and every constant or tabulated value is a
+parameter with the usual value as default (e.g. `moisture=13`, `b=0.52`).
+
+Functions can also be reached by submodule (`agm.radiation`, `agm.humidity`,
+`agm.evapotranspiration`, etc.).
+
+## Portuguese API
+
+The same functions are available with Portuguese names (following Pereira,
+Angelocci & Sentelhas, 2002, the reference textbook in Brazil) at the top
+level of the package. Both APIs share one implementation and give identical
+results; the Portuguese API is permanent.
+
+```python
+import agrometeorologiapy as amp
+
+amp.relacao_n_N(Qg=22.5, Qo=42.98, lat=-24.86)                 # 0.501
+agm.relative_sunshine_duration(Rs=22.5, Ra=42.98, lat=-24.86)  # 0.501
+```
+
+Full name mapping: [`docs/API_PT_EN.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/API_PT_EN.md).
+
+## Modules
+
+| Module (en · pt) | Contents |
 | --- | --- |
-| `radiacao` · `en.radiation` | NDA, declinação solar, ângulo horário, ângulo zenital, azimute solar, fotoperíodo, irradiância extraterrestre, radiação global (Angström-Prescott, Hargreaves-Samani) e razão de insolação n/N (`relacao_n_N`, Angström-Prescott invertida) |
-| `temperatura` · `en.temperature` | Temperatura média diária (extremos e estação automática) |
-| `umidade` · `en.humidity` | Pressão de saturação/parcial de vapor, déficit de saturação, pressão atmosférica, umidade absoluta/relativa/de saturação, ponto de orvalho, constante psicrométrica |
-| `energia` · `en.energy` | Saldo de radiação, balanço de ondas curtas e longas |
-| `evapotranspiracao` · `en.evapotranspiration` | ETP por Thornthwaite, Camargo-Maluf, Hargreaves-Samani, Priestley-Taylor; ETo por Penman-Monteith FAO-56; conversão do vento para 2 m |
-| `grau_dias` · `en.degree_days` | Data de maturação fisiológica / data de semeadura por acúmulo de graus-dia |
-| `balanco_hidrico` · `en.water_balance` | Balanço hídrico climatológico e de cultura (Thornthwaite & Mather) |
-| `classificacao_climatica` · `en.climate_classification` | Köppen-Geiger, Thornthwaite, Camargo e Holdridge, para um local ou em grade (rasters) |
-| `produtividade` · `en.crop_yield` | Zona Agroecológica da FAO (Doorenbos & Kassam): correções de temperatura cTn e cTc (C3/C4), PPBp, CIAF, CR, produtividade potencial (PPf, em escala diária, decendial ou mensal) e atingível (PA, por fase ou em etapa única) com eficiência climática |
+| `en.radiation` · `radiacao` | Day of the year, solar declination, hour angle, zenith angle, solar azimuth, daylight hours, extraterrestrial radiation, solar radiation (Angstrom, Hargreaves) and relative sunshine duration n/N (inverted Angstrom formula) |
+| `en.temperature` · `temperatura` | Mean daily temperature (from extremes and from station observations) |
+| `en.humidity` · `umidade` | Saturation and actual vapour pressure, vapour pressure deficit, atmospheric pressure, absolute, saturation and relative humidity, dewpoint temperature, psychrometric constant |
+| `en.energy` · `energia` | Net shortwave, net longwave and net radiation |
+| `en.evapotranspiration` · `evapotranspiracao` | PET by Thornthwaite, Camargo-Maluf, Hargreaves-Samani and Priestley-Taylor; ETo by FAO Penman-Monteith; wind speed at 2 m |
+| `en.degree_days` · `grau_dias` | Physiological maturity date / sowing date by accumulated growing degree days |
+| `en.water_balance` · `balanco_hidrico` | Climatic and crop water balance (Thornthwaite & Mather), with the WRSI |
+| `en.climate_classification` · `classificacao_climatica` | Köppen-Geiger, Thornthwaite, Camargo and Holdridge, for one location or on a grid (rasters) |
+| `en.crop_yield` · `produtividade` | FAO Agro-Ecological Zone model (Doorenbos & Kassam): temperature corrections for C3/C4 crops, gross potential productivity, LAI and respiration corrections, potential yield (daily, dekadal or monthly) and attainable yield (by phase or in a single step) with climatic efficiency |
 
-- [`docs/FORMULAS.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md) ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md)) — documentação matemática de cada função: a fórmula original, variáveis e unidades.
-- [`examples/tutorial_colab.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb) — tutorial guiado, pronto para o Colab, com um exemplo executável para cada função ([English](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb), com a API em inglês).
-- [`examples/formulas_agrometeorologia.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/formulas_agrometeorologia.ipynb) — notebook original de desenvolvimento, com a dedução teórica de cada fórmula.
+- [`docs/FORMULAS.en.md`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.en.md) ([Português](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/docs/FORMULAS.md)) — mathematical documentation of every function: the original formula, variables and units.
+- [`examples/tutorial_colab_en.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab_en.ipynb) ([Português](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/tutorial_colab.ipynb)) — guided tour, ready for Colab, with a runnable example for every function.
+- [`examples/formulas_agrometeorologia.ipynb`](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/examples/formulas_agrometeorologia.ipynb) — original development notebook (in Portuguese), with the derivation of each formula.
 
-## Desenvolvimento
+## Development
 
 ```bash
 git clone https://github.com/fcoliveira-utfpr/agrometeorologiapy.git
@@ -148,6 +157,6 @@ pip install -e ".[dev]"
 pytest
 ```
 
-## Licença
+## License
 
-BSD-3-Clause. Veja [LICENSE](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LICENSE).
+BSD-3-Clause. See [LICENSE](https://github.com/fcoliveira-utfpr/agrometeorologiapy/blob/main/LICENSE).

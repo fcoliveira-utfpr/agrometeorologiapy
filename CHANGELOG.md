@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1] - 2026-10-24
+
+### Documentação
+- `README.md` passa a ser em inglês (é a página do projeto no PyPI), com os
+  exemplos na API em inglês; o README em português vira `LEIAME.md`. Os dois
+  têm link um para o outro.
+- `pyproject.toml`: descrição curta (resumo do PyPI) em inglês.
+
 ## [1.0.0] - 2026-10-24
 
 ### Adicionado

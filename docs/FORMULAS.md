@@ -4,7 +4,7 @@
 
 Documentação matemática de cada função pública do `agrometeorologiapy`: a
 fórmula original, o significado de cada variável e a unidade esperada.
-Para instalação e exemplos de uso, veja o [README](../README.md); para um
+Para instalação e exemplos de uso, veja o [LEIAME](../LEIAME.md); para um
 tutorial executável, veja
 [`examples/tutorial_colab.ipynb`](../examples/tutorial_colab.ipynb).
 
