@@ -5,7 +5,8 @@ energia, evapotranspiração (Thornthwaite, Camargo-Maluf, Hargreaves-Samani,
 Priestley-Taylor, Penman-Monteith FAO-56), grau-dias, balanço hídrico
 (climatológico e de cultura), classificação climática (Köppen-Geiger,
 Thornthwaite, Camargo e Holdridge), produtividade potencial e atingível
-(Zona Agroecológica da FAO) e avaliação de modelos (RMSE, d de Willmott,
+(Zona Agroecológica da FAO), riscos agroclimáticos (geada, estresse
+térmico e molhamento foliar) e avaliação de modelos (RMSE, d de Willmott,
 NSE, KGE).
 
 As funções estão disponíveis com nomes em português (este nível) e em
@@ -77,6 +78,15 @@ from .radiacao import (
     nda,
     relacao_n_N,
 )
+from .riscos import (
+    categoria_itu,
+    dias_estresse_calor,
+    duracao_molhamento_foliar,
+    graus_dia_estresse_calor,
+    indice_temperatura_umidade,
+    periodo_retorno,
+    probabilidade_geada,
+)
 from .temperatura import temp_media_estacao_automatica, temp_media_extremos
 from .umidade import (
     constante_psicrometrica,
@@ -118,4 +128,7 @@ __all__ = [
     "produtividade_potencial", "produtividade_atingivel",
     "mbe", "mae", "rmse", "r_pearson", "d_willmott", "indice_confianca",
     "categoria_indice_confianca", "nse", "kge", "avaliar_modelo",
+    "probabilidade_geada", "periodo_retorno", "indice_temperatura_umidade",
+    "categoria_itu", "dias_estresse_calor", "graus_dia_estresse_calor",
+    "duracao_molhamento_foliar",
 ]

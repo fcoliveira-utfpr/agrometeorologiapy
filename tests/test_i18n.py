@@ -12,7 +12,7 @@ from agrometeorologiapy._i18n import traduzir
 
 MODULOS_PT = [amp.radiacao, amp.temperatura, amp.umidade, amp.energia, amp.evapotranspiracao,
               amp.grau_dias, amp.balanco_hidrico, amp.classificacao_climatica, amp.produtividade,
-              amp.avaliacao_modelos]
+              amp.riscos, amp.avaliacao_modelos]
 
 
 def _funcoes_traduzidas():

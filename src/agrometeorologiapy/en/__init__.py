@@ -84,6 +84,15 @@ from .crop_yield import (
     temperature_correction_clear,
     temperature_correction_overcast,
 )
+from .climate_risk import (
+    frost_probability,
+    heat_stress_days,
+    heat_stress_degree_days,
+    leaf_wetness_duration,
+    return_period,
+    temperature_humidity_index,
+    thi_category,
+)
 from .model_evaluation import (
     confidence_index,
     confidence_index_category,
@@ -163,6 +172,14 @@ __all__ = [
     "respiration_correction",
     "potential_yield",
     "attainable_yield",
+    # climate_risk
+    "frost_probability",
+    "return_period",
+    "temperature_humidity_index",
+    "thi_category",
+    "heat_stress_days",
+    "heat_stress_degree_days",
+    "leaf_wetness_duration",
     # model_evaluation
     "mbe",
     "mae",
